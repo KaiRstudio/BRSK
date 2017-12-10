@@ -8,15 +8,39 @@
 # ---- General Terms ----
 formatofdate <- "%Y-%m-%d"
 
+age = function(from, to) {
+  from_lt = as.POSIXlt(from)
+  to_lt = as.POSIXlt(to)
+  
+  age = to_lt$year - from_lt$year
+  
+  ifelse(
+    to_lt$mon < from_lt$mon |
+      (to_lt$mon == from_lt$mon & to_lt$mday < from_lt$mday),
+    age - 1,
+    age
+  )
+} #-------I used this function to calculate age so maybe we can use it later on. Therefore I leave it here.
+
+#######Converting dates
+for (chrVar in c("order_date", "delivery_date", "user_reg_date", "user_dob")) {
+ daten[, chrVar] <- as.Date(daten[[chrVar]])
+}
+
+
 # ---- Order Item ID ----
 table(is.na(daten$order_item_id))
 
 # ---- Order Date ----
-daten$order_date <- as.Date(daten$order_date, format = formatofdate)
+
 # ---- Delivery Date ----
-daten$delivery_date <- as.Date(daten$delivery_date, format = formatofdate)
 daten$delivery_date[daten$delivery_date == "1990-12-31"] <- NA # remove unrealistic times
 sum(is.na(daten$delivery_date)) # should be zero
+
+#-----Delivery Time------
+#Subtract delivery date from order date so we can see "delivery time" which might be important for prediction.
+daten$delivery.time<-daten$delivery_date - daten$order_date
+
 # ---- Item ID ----
 
 # ---- Size ----
@@ -33,12 +57,10 @@ sum(is.na(daten$delivery_date)) # should be zero
 daten$user_title[daten$user_title == "not reported"] <- NA # remove not reported titles
 table(daten$user_title)
 # ---- Date of birth ----
-daten$user_dob <- as.Date(daten$user_dob, format = formatofdate)
+
 # ---- User State ----
 
 # ---- Registration Date ----
-daten$user_reg_date <- as.Date(daten$user_reg_date, format = formatofdate)
-
 
 
 # ---- IDEAS ----
