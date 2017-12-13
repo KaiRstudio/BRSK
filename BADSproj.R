@@ -91,7 +91,7 @@ sum(is.na(daten$delivery_date)) # should be zero
 daten$item_size <- factor(toupper(daten$item_size))
 table_size <- table(daten$item_size)
 levels(daten$item_size) <- c(names(table_size), "Other")
-daten$item_size[is.na(x$item_size)] <- factor("Other")
+daten$item_size[is.na(daten$item_size)] <- factor("Other")
 daten[daten$item_size %in% names(table_size)[table_size < 100],"item_size"] <- factor("Other")
 daten$item_size <- factor(daten$item_size)
 # ---- Color ----
@@ -137,8 +137,8 @@ daten$user_title <- factor(daten$user_title)
 # ---- Age ----
 daten$age <- as.numeric(round((daten$order_date - daten$user_dob)/ 365.25))
 
-med.age <- median(x$age, na.rm = TRUE)
-x$age[is.na(x$age)] <- med.age
+med.age <- median(daten$age, na.rm = TRUE)
+daten$age[is.na(daten$age)] <- med.age
 Returns$age <- Z.outlier(Returns$age) 
 
 daten$age2 <- daten$age
