@@ -161,7 +161,13 @@ missmap(daten, main = "Missing values vs observed") # to give a plot of the miss
 # 1)  In case someone buys more stuff at once, the whole thing should obviously not be 
 #     discouraged because one or two items are likely to be returned
 #     rather try to get the one item out of the cart
-# 2)  the likelihood of an item being returned has to be seen in respect to how much
+# 2)  The likelihood of an item being returned has to be seen in respect to how much
 #     would be lost if discouraged and wouldnt have been returned. It is worse if cheap items
 #     are returned than expensive ones, because percentage wise the return is more expensive
 #     as well as its 3€ plus 10 % ov value.
+# 3)  Maybe other categories as alternative to binning? a) dark-light contrasting
+#     b) warm-cold contrast c) black-white contrast ... are dark colors returned more in summertime?
+#     combining fasion colors with months and returns? colors  can look differently online.
+# 4)  validate instead of bootstrap instead of 80/20 ?
+# 5)  likelihood ratio test; AIC; step function (direction: both)
+# 6)  Without knowing the item, statements about price or size can hardly be made
