@@ -1,5 +1,5 @@
 # GROUP 45 members:
-#   - Bastian
+#   - Sebastian Gütgemann (589623) - s.guetgemann@gmx.net
 #   - Rieke
 #   - Sena
 #   - Kai Dessau (559766) - kai-dessau@web.de
