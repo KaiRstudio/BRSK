@@ -4,6 +4,38 @@
 #   - Sena
 #   - Kai Dessau (559766) - kai-dessau@web.de
 
+daten <- read.csv('C:/Users/Administrator/Google Drive/Exports/BADS/BADS_WS1718_known.csv',
+                    sep=",",
+                    na.strings = c("?","not reported"),
+                    colClasses = c("order_date" ="Date",
+                                   "delivery_date" = "Date",
+                                   "user_reg_date" = "Date",
+                                   "user_dob" = "Date",
+                                   "order_item_id" = "factor",
+                                   "item_id" = "factor",
+                                   "brand_id" = "factor" ,
+                                   "user_id" = "factor",
+                                   "return" = "factor"))
+
+# ---- Packages ----
+if(!require("plyr"))          install.packages("plyr");         library("plyr")
+if(!require("dplyr"))         install.packages("dplyr");        library("dplyr")
+if(!require("stringdist"))    install.packages("stringdist");   library("stringdist")
+if(!require("rpart"))         install.packages("rpart");        library("rpart")
+if(!require("psych"))         install.packages("psych");        library("psych")
+if(!require("car"))           install.packages("car");          library("car")
+if(!require("Amelia"))        install.packages("Amelia");       library("Amelia")
+if(!require("boot"))          install.packages("boot", dep=T);  library("boot")
+if(!require("caret"))         install.packages("caret");        library("caret")
+if(!require("rpart"))         install.packages("rpart");        library("rpart")
+if(!require("rattle"))        install.packages("rattle");       library("rattle")
+if(!require("rpart.plot"))    install.packages("rpart.plot");   library("rpart.plot")
+if(!require("RColorBrewer"))  install.packages("RColorBrewer"); library("RColorBrewer")
+if(!require("rms"))           install.packages("rms");          library("rms")
+if(!require("pROC"))          install.packages("pROC");         library("pROC")
+# review at the end which ones we really need
+
+
 
 # ---- General Terms ----
 formatofdate <- "%Y-%m-%d"
@@ -21,6 +53,13 @@ age = function(from, to) {
     age
   )
 } #-------I used this function to calculate age so maybe we can use it later on. Therefore I leave it here.
+
+Z.outlier <- function(x){
+  Zscore <- scale(x)
+  x[Zscore >3] <- NA
+  x[Zscore <(-3)] <- NA
+  return(x)    
+}
 
 #######Converting dates
 for (chrVar in c("order_date", "delivery_date", "user_reg_date", "user_dob")) {
