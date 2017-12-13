@@ -1,10 +1,11 @@
+# ---- INTRO ----
 # GROUP 45 members:
-#   - Bastian
+#   - Sebastia
 #   - Rieke
-#   - Sena
+#   - Sena Aydin (594644) - senaaydin484@gmail.com
 #   - Kai Dessau (559766) - kai-dessau@web.de
 
-daten <- read.csv('C:/Users/Administrator/Google Drive/Exports/BADS/BADS_WS1718_known.csv',
+daten <- read.csv('C:\\Users\\Kai\\Desktop\\BADS_assignment',
                     sep=",",
                     na.strings = c("?","not reported"),
                     colClasses = c("order_date" ="Date",
@@ -33,6 +34,9 @@ if(!require("rpart.plot"))    install.packages("rpart.plot");   library("rpart.p
 if(!require("RColorBrewer"))  install.packages("RColorBrewer"); library("RColorBrewer")
 if(!require("rms"))           install.packages("rms");          library("rms")
 if(!require("pROC"))          install.packages("pROC");         library("pROC")
+if(!require("e1071"))         install.packages("e1071");        library("e1071")
+if(!require("randomforest"))  install.packages("randomforest"); library("randomforest")
+if(!require("hmeasure"))      install.packages("hmeasure");     library("hmeasure")
 # review at the end which ones we really need
 
 # ---- General Terms ----
@@ -55,7 +59,6 @@ Z.outlier <- function(x){
   return(x)    
 }
 
-#######Converting dates
 for (chrVar in c("order_date", "delivery_date", "user_reg_date", "user_dob")) {
  daten[, chrVar] <- as.Date(daten[[chrVar]])
 }
@@ -75,6 +78,8 @@ daten$delivery_date[is.na(daten$delivery_date)]<- daten$order_date[is.na(daten$d
 daten$delivery_time[is.na(daten$delivery_time)] <- MED_DEL
 daten$regorderdiff <- daten$order_date - daten$user_reg_date
 
+
+
 hist(as.numeric(daten$regorderdiff)) # many people that registered and immediately bought, the rest is equally distributed up until 774 days
 max(daten$delivery_time, na.rm =TRUE) # delivery has to be timely after order date, the max is 151 days
 min(daten$delivery_time, na.rm =TRUE) # check that minimal delivery time is zero
@@ -83,18 +88,18 @@ sum(is.na(daten$delivery_date)) # should be zero
 # ---- Item ID ----
 
 # ---- Size ----
-x$item_size <- factor(toupper(x$item_size))
-table_size <- table(x$item_size)
-levels(x$item_size) <- c(names(table_size), "Other")
-x$item_size[is.na(x$item_size)] <- factor("Other")
-x[x$item_size %in% names(table_size)[table_size < 100],"item_size"] <- factor("Other")
-x$item_size <- factor(x$item_size)
+daten$item_size <- factor(toupper(daten$item_size))
+table_size <- table(daten$item_size)
+levels(daten$item_size) <- c(names(table_size), "Other")
+daten$item_size[is.na(x$item_size)] <- factor("Other")
+daten[daten$item_size %in% names(table_size)[table_size < 100],"item_size"] <- factor("Other")
+daten$item_size <- factor(daten$item_size)
 # ---- Color ----
-table_col_clust <- table(x$item_color)
-levels(x$item_color) <- c(names(table_col_clust), "Other")
-x$item_color[is.na(x$item_color)] <- factor("Other")
-x[x$item_color %in% names(table_col_clust)[table_col_clust < 200],"item_color"] <- factor("Other")
-x$item_color <- factor(x$item_color)
+table_col_clust <- table(daten$item_color)
+levels(daten$item_color) <- c(names(table_col_clust), "Other")
+daten$item_color[is.na(daten$item_color)] <- factor("Other")
+daten[daten$item_color %in% names(table_col_clust)[table_col_clust < 200],"item_color"] <- factor("Other")
+daten$item_color <- factor(daten$item_color)
 
 daten$item_colorcat <- as.factor(daten$item_color) # categorisation is very subjective
 daten$item_colorcat[daten$item_colorcat == "?"] <- NA
@@ -110,24 +115,25 @@ table(daten$item_colorcat)
 # ---- Brand ID ----
 
 # ---- Price ----
-x$item_price[x$item_price==0] <-NA
-med.ip <- median(x$item_price, na.rm=TRUE)
-x$item_price[is.na(x$item_price)] <- med.ip
-Returns$item_price <- Z.outlier(Returns$item_price)
-
+daten$pricecat <- daten$item_price
 daten$pricecat <- cut(daten$pricecat,c(-1, 0, 20, 50, 100, 200, 400), labels=c(NA, "0-20", "20-50", "50-100", "100-200", "200-400"))
+
+daten$item_price[daten$item_price == 0] <-NA
+med_item_price <- median(daten$item_price, na.rm=TRUE)
+daten$item_price[is.na(daten$item_price)] <- med_item_price
+daten$item_price <- Z.outlier(daten$item_price)
 # ---- User ID ----
 
 # ---- Title ----
 daten$user_title[daten$user_title == "not reported"] <- NA # remove not reported titles
 table(daten$user_title)
 
-table_title <- table(x$user_title)
-levels(x$user_title) <- c(names(table_title), "Other")
-x$user_title[is.na(x$user_title)] <- factor("Other")
-x$user_title[x$user_title == "Company"] <- factor("Other")
-x$user_title[x$user_title == "Family"] <- factor("Other")
-x$user_title <- factor(x$user_title)
+table_title <- table(daten$user_title)
+levels(daten$user_title) <- c(names(table_title), "Other")
+daten$user_title[is.na(daten$user_title)] <- factor("Other")
+daten$user_title[daten$user_title == "Company"] <- factor("Other")
+daten$user_title[daten$user_title == "Family"] <- factor("Other")
+daten$user_title <- factor(daten$user_title)
 # ---- Age ----
 daten$age <- as.numeric(round((daten$order_date - daten$user_dob)/ 365.25))
 
