@@ -70,36 +70,52 @@ for (chrVar in c("order_date", "delivery_date", "user_reg_date", "user_dob")) {
 # ---- Order Item ID ----
 table(is.na(daten$order_item_id))
 
-# ---- Order Date ----
-
-# ---- Delivery Date ----
+# ---- Dates ----
+x$delivery_date[x$order_date>x$delivery_date] <-NA
 daten$delivery_date[daten$delivery_date == "1990-12-31"] <- NA # remove unrealistic times
 sum(is.na(daten$delivery_date)) # should be zero
-
-#-----Delivery Time------
-#Subtract delivery date from order date so we can see "delivery time" which might be important for prediction.
-daten$delivery.time<-daten$delivery_date - daten$order_date
-
+daten$delivery.time<-daten$delivery_date - daten$order_date #Subtract delivery date from order date so we can see "delivery time" which might be important for prediction.
+x$order_month <- as.factor(months(x$order_date))
 # ---- Item ID ----
 
 # ---- Size ----
-
+x$item_size <- factor(toupper(x$item_size))
+table_size <- table(x$item_size)
+levels(x$item_size) <- c(names(table_size), "Other")
+x$item_size[is.na(x$item_size)] <- factor("Other")
+x[x$item_size %in% names(table_size)[table_size < 100],"item_size"] <- factor("Other")
+x$item_size <- factor(x$item_size)
 # ---- Color ----
+table_col_clust <- table(x$item_color)
+levels(x$item_color) <- c(names(table_col_clust), "Other")
+x$item_color[is.na(x$item_color)] <- factor("Other")
+x[x$item_color %in% names(table_col_clust)[table_col_clust < 200],"item_color"] <- factor("Other")
+x$item_color <- factor(x$item_color)
+
 
 # ---- Brand ID ----
 
 # ---- Price ----
+x$item_price[x$item_price==0] <-NA
 
+med.ip <- median(x$item_price, na.rm=TRUE)
+x$item_price[is.na(x$item_price)] <- med.ip
 # ---- User ID ----
 
 # ---- Title ----
 daten$user_title[daten$user_title == "not reported"] <- NA # remove not reported titles
 table(daten$user_title)
-# ---- Date of birth ----
 
+table_title <- table(x$user_title)
+levels(x$user_title) <- c(names(table_title), "Other")
+x$user_title[is.na(x$user_title)] <- factor("Other")
+x$user_title[x$user_title == "Company"] <- factor("Other")
+x$user_title[x$user_title == "Family"] <- factor("Other")
+x$user_title <- factor(x$user_title)
+# ---- Age ----
+med.age <- median(x$age, na.rm = TRUE)
+x$age[is.na(x$age)] <- med.age
 # ---- User State ----
-
-# ---- Registration Date ----
 
 
 # ---- IDEAS ----
