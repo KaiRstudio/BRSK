@@ -4,8 +4,8 @@
 #   - Rieke
 #   - Sena Aydin (594644) - senaaydin484@gmail.com
 #   - Kai Dessau (559766) - kai-dessau@web.de
-
-daten <- read.csv('C:\\Users\\Kai\\Desktop\\BADS_assignment',
+setwd("~/Humboldt/BADS/BADS")
+daten <- read.csv("BADS_WS1718_known.csv",
                   sep=",",
                   na.strings = c("?","not reported"),
                   colClasses = c("order_date" ="Date",
@@ -19,24 +19,24 @@ daten <- read.csv('C:\\Users\\Kai\\Desktop\\BADS_assignment',
                                  "return" = "factor"))
 
 # ---- Packages ----
-if(!require("plyr"))          install.packages("plyr");         library("plyr")
-if(!require("dplyr"))         install.packages("dplyr");        library("dplyr")
-if(!require("stringdist"))    install.packages("stringdist");   library("stringdist")
-if(!require("rpart"))         install.packages("rpart");        library("rpart")
-if(!require("psych"))         install.packages("psych");        library("psych")
-if(!require("car"))           install.packages("car");          library("car")
-if(!require("Amelia"))        install.packages("Amelia");       library("Amelia")
-if(!require("boot"))          install.packages("boot", dep=T);  library("boot")
-if(!require("caret"))         install.packages("caret");        library("caret")
-if(!require("rpart"))         install.packages("rpart");        library("rpart")
-if(!require("rattle"))        install.packages("rattle");       library("rattle")
-if(!require("rpart.plot"))    install.packages("rpart.plot");   library("rpart.plot")
-if(!require("RColorBrewer"))  install.packages("RColorBrewer"); library("RColorBrewer")
-if(!require("rms"))           install.packages("rms");          library("rms")
-if(!require("pROC"))          install.packages("pROC");         library("pROC")
-if(!require("e1071"))         install.packages("e1071");        library("e1071")
-if(!require("randomforest"))  install.packages("randomforest"); library("randomforest")
-if(!require("hmeasure"))      install.packages("hmeasure");     library("hmeasure")
+# if(!require("plyr"))          install.packages("plyr");         library("plyr")
+# if(!require("dplyr"))         install.packages("dplyr");        library("dplyr")
+# if(!require("stringdist"))    install.packages("stringdist");   library("stringdist")
+# if(!require("rpart"))         install.packages("rpart");        library("rpart")
+# if(!require("psych"))         install.packages("psych");        library("psych")
+# if(!require("car"))           install.packages("car");          library("car")
+# if(!require("Amelia"))        install.packages("Amelia");       library("Amelia")
+# if(!require("boot"))          install.packages("boot", dep=T);  library("boot")
+# if(!require("caret"))         install.packages("caret");        library("caret")
+# if(!require("rpart"))         install.packages("rpart");        library("rpart")
+# if(!require("rattle"))        install.packages("rattle");       library("rattle")
+# if(!require("rpart.plot"))    install.packages("rpart.plot");   library("rpart.plot")
+# if(!require("RColorBrewer"))  install.packages("RColorBrewer"); library("RColorBrewer")
+# if(!require("rms"))           install.packages("rms");          library("rms")
+# if(!require("pROC"))          install.packages("pROC");         library("pROC")
+# if(!require("e1071"))         install.packages("e1071");        library("e1071")
+# if(!require("randomforest"))  install.packages("randomforest"); library("randomforest")
+# if(!require("hmeasure"))      install.packages("hmeasure");     library("hmeasure")
 # review at the end which ones we really need
 
 # ---- General Terms ----
@@ -59,18 +59,19 @@ Z.outlier <- function(x){
   return(x)    
 }
 
-for (chrVar in c("order_date", "delivery_date", "user_reg_date", "user_dob")) {
-  daten[, chrVar] <- as.Date(daten[[chrVar]])
-}
 
 
 # ---- Order Item ID ----
 table(is.na(daten$order_item_id))
 
 # ---- Dates ----
-daten$delivery_date[daten$order_date>daten$delivery_date] <-NA
-daten$delivery_date[daten$delivery_date == "1990-12-31"] <- NA # remove unrealistic times
 daten$delivery_time <- daten$delivery_date - daten$order_date #Subtract delivery date from order date so we can see "delivery time"
+daten$delivery.time_factor[is.na(daten$delivery_time)]<-"neverReturned"
+daten$delivery.time_factor[daten$delivery_time<0]<-"rarelyReturned"
+daten$delivery.time_factor[daten$delivery_time>=0]<-"returnedHalfTheTime"
+daten$delivery.time_factor<- as.factor(daten$delivery.time_factor)
+daten$delivery_date[daten$delivery_date == "1990-12-31"] <- NA # remove unrealistic times
+daten$delivery_date[daten$order_date>daten$delivery_date] <-NA
 daten$order_month <- as.factor(months(daten$order_date)) # new column with month of delivery
 daten$delivery_time <- Z.outlier(daten$delivery_time) # removing outliers from delivery time
 MED_delivery <- round( median (daten$delivery_time, na.rm =TRUE)) # round( mean (daten$delivery_time, na.rm =TRUE)) gives median of 4 and mean of 11 for delivery time
@@ -128,12 +129,10 @@ daten$item_price <- Z.outlier(daten$item_price)
 daten$user_title[daten$user_title == "not reported"] <- NA # remove not reported titles
 table(daten$user_title)
 
-table_title <- table(daten$user_title)
-levels(daten$user_title) <- c(names(table_title), "Other")
-daten$user_title[is.na(daten$user_title)] <- factor("Other")
-daten$user_title[daten$user_title == "Company"] <- factor("Other")
-daten$user_title[daten$user_title == "Family"] <- factor("Other")
-daten$user_title <- factor(daten$user_title)
+daten$user_title<-as.character(daten$user_title)
+daten$user_title[daten$user_title!='Mrs']<-'Other'
+daten$user_title<-as.factor(daten$user_title)
+
 # ---- Age ----
 daten$age <- as.numeric(round((daten$order_date - daten$user_dob)/ 365.25))
 
