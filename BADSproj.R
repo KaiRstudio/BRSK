@@ -1,8 +1,9 @@
 #   - Sebastian Gütgemann (589623) - s.guetgemann@gmx.net
-#   - Rieke
+#   - Rieke Ackermann (588611) - rieke.ackermann@web.de
 #   - Sena Aydin (594644) - senaaydin484@gmail.com
 #   - Kai Dessau (559766) - kai-dessau@web.de
 setwd("~/Humboldt/BADS/BADS")
+
 daten <- read.csv("BADS_WS1718_known.csv",
                   sep=",",
                   na.strings = c("?","not reported"),
