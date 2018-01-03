@@ -166,6 +166,5 @@ missmap(daten, main = "Missing values vs observed") # to give a plot of the miss
 # 3)  Maybe other categories as alternative to binning? a) dark-light contrasting
 #     b) warm-cold contrast c) black-white contrast ... are dark colors returned more in summertime?
 #     combining fasion colors with months and returns? colors  can look differently online.
-# 4)  validate instead of bootstrap instead of 80/20 ?
-# 5)  likelihood ratio test; AIC; step function (direction: both)
-# 6)  Without knowing the item, statements about price or size can hardly be made
+# 4)  likelihood ratio test; AIC; step function (direction: both)
+# 5)  Without knowing the item, statements about price or size can hardly be made
