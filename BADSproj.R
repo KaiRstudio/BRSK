@@ -67,8 +67,9 @@ table(is.na(daten$order_item_id))
 daten$delivery_time <- daten$delivery_date - daten$order_date #Subtract delivery date from order date so we can see "delivery time"
 daten$delivery.time_factor[is.na(daten$delivery_time)]<-"neverReturned"
 daten$delivery.time_factor[daten$delivery_time<0]<-"rarelyReturned"
-daten$delivery.time_factor[daten$delivery_time>=0]<-"returnedHalfTheTime"
+daten$delivery.time_factor[daten$delivery_time>=0]<-"returnedHalfeTime" 
 daten$delivery.time_factor<- as.factor(daten$delivery.time_factor)
+daten$regorderdiff <- daten$order_date - daten$user_reg_date
 daten$delivery_date[daten$delivery_date == "1990-12-31"] <- NA # remove unrealistic times
 daten$delivery_date[daten$order_date>daten$delivery_date] <-NA
 daten$order_month <- as.factor(months(daten$order_date)) # new column with month of delivery
