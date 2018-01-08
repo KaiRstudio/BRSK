@@ -49,7 +49,7 @@ age <- function(from, to) {
     to_lt$mon < from_lt$mon |
       (to_lt$mon == from_lt$mon & to_lt$mday < from_lt$mday),
     age - 1,
-    age)} #-------I used this function to calculate age so maybe we can use it later on. Therefore I leave it here.
+    age)} 
 
 Z.outlier <- function(x){
   Zscore <- scale(x)
@@ -64,24 +64,24 @@ Z.outlier <- function(x){
 table(is.na(daten$order_item_id))
 
 # ---- Dates ----
-daten$delivery_time <- daten$delivery_date - daten$order_date #Subtract delivery date from order date so we can see "delivery time"
+daten$delivery_time <- daten$delivery_date - daten$order_date
 daten$delivery.time_factor[is.na(daten$delivery_time)]<-"neverReturned"
 daten$delivery.time_factor[daten$delivery_time<0]<-"rarelyReturned"
 daten$delivery.time_factor[daten$delivery_time>=0]<-"returnedHalfTheTime" 
 daten$delivery.time_factor<- as.factor(daten$delivery.time_factor)
-daten$delivery_date[daten$delivery_date == "1990-12-31"] <- NA # remove unrealistic times
-daten$delivery_date[daten$order_date>daten$delivery_date] <-NA
+#daten$delivery_date[daten$delivery_date == "1990-12-31"] <- NA # remove unrealistic times
+#daten$delivery_date[daten$order_date>daten$delivery_date] <-NA
 daten$order_month <- as.factor(months(daten$order_date)) # new column with month of delivery
-daten$delivery_time <- Z.outlier(daten$delivery_time) # removing outliers from delivery time
+#daten$delivery_time <- Z.outlier(daten$delivery_time) # removing outliers from delivery time
 # MED_delivery <- round( median (daten$delivery_time, na.rm =TRUE)) # round( mean (daten$delivery_time, na.rm =TRUE)) gives median of 4 and mean of 11 for delivery time
 # daten$delivery_date[is.na(daten$delivery_date)]<- daten$order_date[is.na(daten$delivery_date)] + MED_DEL
 # daten$delivery_time[is.na(daten$delivery_time)] <- MED_DEL
 daten$regorderdiff <- daten$order_date - daten$user_reg_date
 hist(as.numeric(daten$regorderdiff)) # many people that registered and immediately bought, the rest is equally distributed up until 774 days
-max(daten$delivery_time, na.rm =TRUE) # delivery has to be timely after order date, the max is 151 days
-min(daten$delivery_time, na.rm =TRUE) # check that minimal delivery time is zero
-hist(daten$delivery_time) # Histogram of delivery_time
-sum(is.na(daten$delivery_date)) # should be zero
+#max(daten$delivery_time, na.rm =TRUE) # delivery has to be timely after order date, the max is 151 days
+#min(daten$delivery_time, na.rm =TRUE) # check that minimal delivery time is zero
+#hist(daten$delivery_time) # Histogram of delivery_time
+#sum(is.na(daten$delivery_date)) # should be zero
 # ---- Item ID ----
 
 # ---- Size ----
@@ -131,7 +131,7 @@ daten$user_title[daten$user_title!='Mrs']<-'Other'
 daten$user_title<-as.factor(daten$user_title)
 
 # ---- Age ----
-daten$age <- as.numeric(round((daten$order_date - daten$user_dob)/ 365.25))
+daten$age <- age(daten$user_dob,daten$order_date)
 
 med.age <- median(daten$age, na.rm = TRUE)
 daten$age[is.na(daten$age)] <- med.age
@@ -142,6 +142,8 @@ daten$age2[is.na(daten$age2)] <- round(median(daten$age2, na.rm = T))
 daten$age2 <- ageoutlierclean(daten$age2)
 
 daten$agecat <- recode(daten$agecat, "0:27='18-27';28:37='28-37'; 38:47='38-47'; 48:57='48-57'; 58:67='58-67'; 68:77='68-77'; 78:87='78-87'; 88:100='88-100'")
+
+                       
 
 table(daten$agecat)
 summary(daten$age2)
