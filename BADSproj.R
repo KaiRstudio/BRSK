@@ -67,20 +67,16 @@ table(is.na(daten$order_item_id))
 daten$delivery_time <- daten$delivery_date - daten$order_date #Subtract delivery date from order date so we can see "delivery time"
 daten$delivery.time_factor[is.na(daten$delivery_time)]<-"neverReturned"
 daten$delivery.time_factor[daten$delivery_time<0]<-"rarelyReturned"
-daten$delivery.time_factor[daten$delivery_time>=0]<-"returnedHalfeTime" 
+daten$delivery.time_factor[daten$delivery_time>=0]<-"returnedHalfTheTime" 
 daten$delivery.time_factor<- as.factor(daten$delivery.time_factor)
-daten$regorderdiff <- daten$order_date - daten$user_reg_date
 daten$delivery_date[daten$delivery_date == "1990-12-31"] <- NA # remove unrealistic times
 daten$delivery_date[daten$order_date>daten$delivery_date] <-NA
 daten$order_month <- as.factor(months(daten$order_date)) # new column with month of delivery
 daten$delivery_time <- Z.outlier(daten$delivery_time) # removing outliers from delivery time
-MED_delivery <- round( median (daten$delivery_time, na.rm =TRUE)) # round( mean (daten$delivery_time, na.rm =TRUE)) gives median of 4 and mean of 11 for delivery time
-daten$delivery_date[is.na(daten$delivery_date)]<- daten$order_date[is.na(daten$delivery_date)] + MED_DEL
-daten$delivery_time[is.na(daten$delivery_time)] <- MED_DEL
+# MED_delivery <- round( median (daten$delivery_time, na.rm =TRUE)) # round( mean (daten$delivery_time, na.rm =TRUE)) gives median of 4 and mean of 11 for delivery time
+# daten$delivery_date[is.na(daten$delivery_date)]<- daten$order_date[is.na(daten$delivery_date)] + MED_DEL
+# daten$delivery_time[is.na(daten$delivery_time)] <- MED_DEL
 daten$regorderdiff <- daten$order_date - daten$user_reg_date
-
-
-
 hist(as.numeric(daten$regorderdiff)) # many people that registered and immediately bought, the rest is equally distributed up until 774 days
 max(daten$delivery_time, na.rm =TRUE) # delivery has to be timely after order date, the max is 151 days
 min(daten$delivery_time, na.rm =TRUE) # check that minimal delivery time is zero
@@ -122,7 +118,8 @@ daten$pricecat <- cut(daten$pricecat,c(-1, 0, 20, 50, 100, 200, 400), labels=c(N
 daten$item_price[daten$item_price == 0] <-NA
 med_item_price <- median(daten$item_price, na.rm=TRUE)
 daten$item_price[is.na(daten$item_price)] <- med_item_price
-daten$item_price <- Z.outlier(daten$item_price)
+#daten$item_price <- Z.outlier(daten$item_price) #Are we sure that 399.95 is outlier?
+
 # ---- User ID ----
 
 # ---- Title ----
