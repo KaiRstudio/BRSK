@@ -2,7 +2,7 @@
 #   - Rieke Ackermann     (588611)  ~ rieke.ackermann@web.de
 #   - Sena Aydin          (594644)  ~ senaaydin484@gmail.com
 #   - Kai Dessau          (559766)  ~ kai-dessau@web.de
-TEST
+
 # ---- Packages ----
 if(!require("plyr"))          install.packages("plyr");         library("plyr")
 if(!require("dplyr"))         install.packages("dplyr");        library("dplyr")
