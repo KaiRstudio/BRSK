@@ -42,8 +42,6 @@ daten$user_state    <- as.factor(daten$user_state)
 daten$return        <- as.factor(daten$return)
 
 # ---- General Terms ----
-formatofdate <- "%Y-%m-%d"
-
 age <- function(from, to) {
   from_lt = as.POSIXlt(from)
   to_lt = as.POSIXlt(to)
@@ -102,13 +100,13 @@ daten$item_color <- factor(daten$item_color)
 daten$item_colorcat <- as.factor(daten$item_color) # categorisation is very subjective
 daten$item_colorcat[daten$item_colorcat == "?"] <- NA
 daten$item_colorcat <- ifelse(daten$item_colorcat %in% c("?"), NA,
-                       ifelse(daten$item_colorcat %in% c("petrol", "blau", "blue", "azure", "cobalt blue", "dark navy", "darkblue", "turquoise", "silver", "navy", "aqua", "aquamarine", "baltic blue", "darkblue"), "blue",
-                       ifelse(daten$item_colorcat %in% c("red", "orange", "purple", "currant purple", "pink", "antique pink", "crimson", "bordeaux", "berry", "fuchsia", "perlmutt", "coral", "hibiscus", "magenta", "terracotta", "dark garnet"), "red",
-                       ifelse(daten$item_colorcat %in% c("green", "olive", "oliv", "dark oliv", "mint", "aubergine", "lemon", "nature", "khaki", "avocado", "jade"), "green",
-                       ifelse(daten$item_colorcat %in% c("mocca", "brwon", "brown", "beige", "kanel", "mahagoni", "copper coin", "cognac", "caramel"),"brown",
-                       ifelse(daten$item_colorcat %in% c("apricot", "yellow", "vanille", "gold", "ingwer", "white", "mango", "almond", "champagner", "creme", "curry", "ivory", "ocher"), "yellow",
-                       ifelse(daten$item_colorcat %in% c("grey", "black", "dark grey", "graphite", "iron", "habana", "ebony", "amethyst", "basalt", "ash", "ancient", "anthracite", "denim", "dark denim"), "dark",
-                       ifelse(daten$item_colorcat %in% c("striped", "aviator", "pallid", "opal", "stained", "floral", "ecru", "curled"), "others", daten$item_colorcat))))))))
+                              ifelse(daten$item_colorcat %in% c("petrol", "blau", "blue", "azure", "cobalt blue", "dark navy", "darkblue", "turquoise", "silver", "navy", "aqua", "aquamarine", "baltic blue", "darkblue"), "blue",
+                                     ifelse(daten$item_colorcat %in% c("red", "orange", "purple", "currant purple", "pink", "antique pink", "crimson", "bordeaux", "berry", "fuchsia", "perlmutt", "coral", "hibiscus", "magenta", "terracotta", "dark garnet"), "red",
+                                            ifelse(daten$item_colorcat %in% c("green", "olive", "oliv", "dark oliv", "mint", "aubergine", "lemon", "nature", "khaki", "avocado", "jade"), "green",
+                                                   ifelse(daten$item_colorcat %in% c("mocca", "brwon", "brown", "beige", "kanel", "mahagoni", "copper coin", "cognac", "caramel"),"brown",
+                                                          ifelse(daten$item_colorcat %in% c("apricot", "yellow", "vanille", "gold", "ingwer", "white", "mango", "almond", "champagner", "creme", "curry", "ivory", "ocher"), "yellow",
+                                                                 ifelse(daten$item_colorcat %in% c("grey", "black", "dark grey", "graphite", "iron", "habana", "ebony", "amethyst", "basalt", "ash", "ancient", "anthracite", "denim", "dark denim"), "dark",
+                                                                        ifelse(daten$item_colorcat %in% c("striped", "aviator", "pallid", "opal", "stained", "floral", "ecru", "curled"), "others", daten$item_colorcat))))))))
 table(daten$item_colorcat) 
 # ---- Brand ID ----
 
@@ -136,13 +134,12 @@ med.age <- round(median(daten$age, na.rm = TRUE))
 daten$age[is.na(daten$age)] <- med.age
 daten$age <- Z.outlier(daten$age)
 
-daten$agecat <- recode(daten$agecat, "0:27='18-27';28:37='28-37'; 38:47='38-47'; 48:57='48-57'; 58:67='58-67'; 68:77='68-77'; 78:87='78-87'; 88:100='88-100'")
+daten$agecat <- recode(daten$age, "0:27='18-27';28:37='28-37'; 38:47='38-47'; 48:57='48-57'; 58:67='58-67'; 68:77='68-77'; 78:87='78-87'; 88:100='88-100'")
 
 table(daten$agecat)
-summary(daten$age2)
-hist(daten$age2)
-boxplot(daten$age2)
+summary(daten$age)
 hist(daten$age)
+boxplot(daten$age)
 # ---- User State ----
 
 
