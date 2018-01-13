@@ -2,20 +2,20 @@
 #   - Rieke Ackermann (588611) - rieke.ackermann@web.de
 #   - Sena Aydin (594644) - senaaydin484@gmail.com
 #   - Kai Dessau (559766) - kai-dessau@web.de
-setwd("~/Humboldt/BADS/BADS")
 
-daten <- read.csv("BADS_WS1718_known.csv",
-                  sep=",",
-                  na.strings = c("?","not reported"),
-                  colClasses = c("order_date" ="Date",
-                                 "delivery_date" = "Date",
-                                 "user_reg_date" = "Date",
-                                 "user_dob" = "Date",
-                                 "order_item_id" = "factor",
-                                 "item_id" = "factor",
-                                 "brand_id" = "factor" ,
-                                 "user_id" = "factor",
-                                 "return" = "factor"))
+githubURL <- "https://raw.githubusercontent.com/KaiRstudio/BRSK/master/BADS_WS1718_known_MODEL_FITTING.csv"
+daten <- source_data(githubURL, sha1 ="254e37cf5b7fe121e2e9c8212803cda9415c9de7", header = "auto", sep=",")
+#sha1 is the hash to make sure data hasnt changed
+formatofdate        <- "%Y-%m-%d"
+daten$order_date    <- as.Date(daten$order_date, format = formatofdate)
+daten$delivery_date <- as.Date(daten$delivery_date, format = formatofdate)
+daten$user_reg_date <- as.Date(daten$user_reg_date, format = formatofdate)
+daten$user_dob      <- as.Date(daten$user_dob, format = formatofdate)
+daten$order_item_id <- as.factor(daten$order_item_id)
+daten$item_id       <- as.factor(daten$item_id)
+daten$brand_id      <- as.factor(daten$brand_id)
+daten$user_id       <- as.factor(daten$user_id)
+daten$return        <- as.factor(daten$return)
 
 # ---- Packages ----
 # if(!require("plyr"))          install.packages("plyr");         library("plyr")
@@ -36,7 +36,7 @@ daten <- read.csv("BADS_WS1718_known.csv",
 # if(!require("e1071"))         install.packages("e1071");        library("e1071")
 # if(!require("randomforest"))  install.packages("randomforest"); library("randomforest")
 # if(!require("hmeasure"))      install.packages("hmeasure");     library("hmeasure")
-# review at the end which ones we really need
+# if(!require("repmis"))        install.packages("repmis");       library("repmis")
 
 # ---- General Terms ----
 formatofdate <- "%Y-%m-%d"
@@ -168,3 +168,5 @@ missmap(daten, main = "Missing values vs observed") # to give a plot of the miss
 #     combining fasion colors with months and returns? colors  can look differently online.
 # 4)  likelihood ratio test; AIC; step function (direction: both)
 # 5)  Without knowing the item, statements about price or size can hardly be made
+# 6)  daten <- daten(na.strings = c("?","not reported") --> question marks and not reported entries havent been replaced with NAs yet
+# 7) # review at the end which packages we really need
