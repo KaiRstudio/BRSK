@@ -3,6 +3,28 @@
 #   - Sena Aydin (594644) - senaaydin484@gmail.com
 #   - Kai Dessau (559766) - kai-dessau@web.de
 
+# ---- Packages ----
+if(!require("plyr"))          install.packages("plyr");         library("plyr")
+if(!require("dplyr"))         install.packages("dplyr");        library("dplyr")
+if(!require("stringdist"))    install.packages("stringdist");   library("stringdist")
+if(!require("rpart"))         install.packages("rpart");        library("rpart")
+if(!require("psych"))         install.packages("psych");        library("psych")
+if(!require("car"))           install.packages("car");          library("car")
+if(!require("Amelia"))        install.packages("Amelia");       library("Amelia")
+if(!require("boot"))          install.packages("boot", dep=T);  library("boot")
+if(!require("caret"))         install.packages("caret");        library("caret")
+if(!require("rpart"))         install.packages("rpart");        library("rpart")
+if(!require("rattle"))        install.packages("rattle");       library("rattle")
+if(!require("rpart.plot"))    install.packages("rpart.plot");   library("rpart.plot")
+if(!require("RColorBrewer"))  install.packages("RColorBrewer"); library("RColorBrewer")
+if(!require("rms"))           install.packages("rms");          library("rms")
+if(!require("pROC"))          install.packages("pROC");         library("pROC")
+if(!require("e1071"))         install.packages("e1071");        library("e1071")
+if(!require("randomforest"))  install.packages("randomforest"); library("randomforest")
+if(!require("hmeasure"))      install.packages("hmeasure");     library("hmeasure")
+if(!require("repmis"))        install.packages("repmis");       library("repmis")
+
+# ---- Load Data ----
 githubURL <- "https://raw.githubusercontent.com/KaiRstudio/BRSK/master/BADS_WS1718_known_MODEL_FITTING.csv"
 daten <- source_data(githubURL, sha1 ="254e37cf5b7fe121e2e9c8212803cda9415c9de7", header = "auto", sep=",")
 #sha1 is the hash to make sure data hasnt changed
@@ -15,28 +37,9 @@ daten$order_item_id <- as.factor(daten$order_item_id)
 daten$item_id       <- as.factor(daten$item_id)
 daten$brand_id      <- as.factor(daten$brand_id)
 daten$user_id       <- as.factor(daten$user_id)
+daten$user_title    <- as.factor(daten$user_title)
+daten$user_state    <- as.factor(daten$user_state)
 daten$return        <- as.factor(daten$return)
-
-# ---- Packages ----
-# if(!require("plyr"))          install.packages("plyr");         library("plyr")
-# if(!require("dplyr"))         install.packages("dplyr");        library("dplyr")
-# if(!require("stringdist"))    install.packages("stringdist");   library("stringdist")
-# if(!require("rpart"))         install.packages("rpart");        library("rpart")
-# if(!require("psych"))         install.packages("psych");        library("psych")
-# if(!require("car"))           install.packages("car");          library("car")
-# if(!require("Amelia"))        install.packages("Amelia");       library("Amelia")
-# if(!require("boot"))          install.packages("boot", dep=T);  library("boot")
-# if(!require("caret"))         install.packages("caret");        library("caret")
-# if(!require("rpart"))         install.packages("rpart");        library("rpart")
-# if(!require("rattle"))        install.packages("rattle");       library("rattle")
-# if(!require("rpart.plot"))    install.packages("rpart.plot");   library("rpart.plot")
-# if(!require("RColorBrewer"))  install.packages("RColorBrewer"); library("RColorBrewer")
-# if(!require("rms"))           install.packages("rms");          library("rms")
-# if(!require("pROC"))          install.packages("pROC");         library("pROC")
-# if(!require("e1071"))         install.packages("e1071");        library("e1071")
-# if(!require("randomforest"))  install.packages("randomforest"); library("randomforest")
-# if(!require("hmeasure"))      install.packages("hmeasure");     library("hmeasure")
-# if(!require("repmis"))        install.packages("repmis");       library("repmis")
 
 # ---- General Terms ----
 formatofdate <- "%Y-%m-%d"
@@ -55,9 +58,7 @@ Z.outlier <- function(x){
   Zscore <- scale(x)
   x[Zscore >3] <- NA
   x[Zscore <(-3)] <- NA
-  return(x)    
-}
-
+  return(x)}
 
 
 # ---- Order Item ID ----
@@ -101,13 +102,13 @@ daten$item_color <- factor(daten$item_color)
 daten$item_colorcat <- as.factor(daten$item_color) # categorisation is very subjective
 daten$item_colorcat[daten$item_colorcat == "?"] <- NA
 daten$item_colorcat <- ifelse(daten$item_colorcat %in% c("?"), NA,
-                              ifelse(daten$item_colorcat %in% c("petrol", "blau", "blue", "azure", "cobalt blue", "dark navy", "darkblue", "turquoise", "silver", "navy", "aqua", "aquamarine", "baltic blue", "darkblue"), "blue",
-                                     ifelse(daten$item_colorcat %in% c("red", "orange", "purple", "currant purple", "pink", "antique pink", "crimson", "bordeaux", "berry", "fuchsia", "perlmutt", "coral", "hibiscus", "magenta", "terracotta", "dark garnet"), "red",
-                                            ifelse(daten$item_colorcat %in% c("green", "olive", "oliv", "dark oliv", "mint", "aubergine", "lemon", "nature", "khaki", "avocado", "jade"), "green",
-                                                   ifelse(daten$item_colorcat %in% c("mocca", "brwon", "brown", "beige", "kanel", "mahagoni", "copper coin", "cognac", "caramel"),"brown",
-                                                          ifelse(daten$item_colorcat %in% c("apricot", "yellow", "vanille", "gold", "ingwer", "white", "mango", "almond", "champagner", "creme", "curry", "ivory", "ocher"), "yellow",
-                                                                 ifelse(daten$item_colorcat %in% c("grey", "black", "dark grey", "graphite", "iron", "habana", "ebony", "amethyst", "basalt", "ash", "ancient", "anthracite", "denim", "dark denim"), "dark",
-                                                                        ifelse(daten$item_colorcat %in% c("striped", "aviator", "pallid", "opal", "stained", "floral", "ecru", "curled"), "others", daten$item_colorcat)))))))
+                       ifelse(daten$item_colorcat %in% c("petrol", "blau", "blue", "azure", "cobalt blue", "dark navy", "darkblue", "turquoise", "silver", "navy", "aqua", "aquamarine", "baltic blue", "darkblue"), "blue",
+                       ifelse(daten$item_colorcat %in% c("red", "orange", "purple", "currant purple", "pink", "antique pink", "crimson", "bordeaux", "berry", "fuchsia", "perlmutt", "coral", "hibiscus", "magenta", "terracotta", "dark garnet"), "red",
+                       ifelse(daten$item_colorcat %in% c("green", "olive", "oliv", "dark oliv", "mint", "aubergine", "lemon", "nature", "khaki", "avocado", "jade"), "green",
+                       ifelse(daten$item_colorcat %in% c("mocca", "brwon", "brown", "beige", "kanel", "mahagoni", "copper coin", "cognac", "caramel"),"brown",
+                       ifelse(daten$item_colorcat %in% c("apricot", "yellow", "vanille", "gold", "ingwer", "white", "mango", "almond", "champagner", "creme", "curry", "ivory", "ocher"), "yellow",
+                       ifelse(daten$item_colorcat %in% c("grey", "black", "dark grey", "graphite", "iron", "habana", "ebony", "amethyst", "basalt", "ash", "ancient", "anthracite", "denim", "dark denim"), "dark",
+                       ifelse(daten$item_colorcat %in% c("striped", "aviator", "pallid", "opal", "stained", "floral", "ecru", "curled"), "others", daten$item_colorcat))))))))
 table(daten$item_colorcat) 
 # ---- Brand ID ----
 
@@ -124,26 +125,18 @@ daten$item_price[is.na(daten$item_price)] <- med_item_price
 
 # ---- Title ----
 daten$user_title[daten$user_title == "not reported"] <- NA # remove not reported titles
+daten$user_title <- as.character(daten$user_title)
+daten$user_title[daten$user_title!='Mrs'] <- 'Other'
+daten$user_title <- as.factor(daten$user_title)
+
 table(daten$user_title)
-
-daten$user_title<-as.character(daten$user_title)
-daten$user_title[daten$user_title!='Mrs']<-'Other'
-daten$user_title<-as.factor(daten$user_title)
-
 # ---- Age ----
 daten$age <- age(daten$user_dob,daten$order_date)
-
-med.age <- median(daten$age, na.rm = TRUE)
+med.age <- round(median(daten$age, na.rm = TRUE))
 daten$age[is.na(daten$age)] <- med.age
-Returns$age <- Z.outlier(Returns$age) 
-
-daten$age2 <- daten$age
-daten$age2[is.na(daten$age2)] <- round(median(daten$age2, na.rm = T))
-daten$age2 <- ageoutlierclean(daten$age2)
+daten$age <- Z.outlier(daten$age)
 
 daten$agecat <- recode(daten$agecat, "0:27='18-27';28:37='28-37'; 38:47='38-47'; 48:57='48-57'; 58:67='58-67'; 68:77='68-77'; 78:87='78-87'; 88:100='88-100'")
-
-                       
 
 table(daten$agecat)
 summary(daten$age2)
@@ -155,7 +148,7 @@ hist(daten$age)
 
 missmap(daten, main = "Missing values vs observed") # to give a plot of the missing values per variable
 
-# ---- IDEAS ----
+# ---- IDEAS & OPEN QUESTIONS ----
 # 1)  In case someone buys more stuff at once, the whole thing should obviously not be 
 #     discouraged because one or two items are likely to be returned
 #     rather try to get the one item out of the cart
@@ -169,4 +162,7 @@ missmap(daten, main = "Missing values vs observed") # to give a plot of the miss
 # 4)  likelihood ratio test; AIC; step function (direction: both)
 # 5)  Without knowing the item, statements about price or size can hardly be made
 # 6)  daten <- daten(na.strings = c("?","not reported") --> question marks and not reported entries havent been replaced with NAs yet
-# 7) # review at the end which packages we really need
+# 7)  review at the end which packages we really need
+# 8)  was is on purpose that user title and user state have not been class-transformed?
+# 9) do we really want to put all titles other than MRS as "other" ?
+# 10) division into rarely returned/never returned should rather not be included
