@@ -20,7 +20,7 @@ if(!require("RColorBrewer"))  install.packages("RColorBrewer"); library("RColorB
 if(!require("rms"))           install.packages("rms");          library("rms")
 if(!require("pROC"))          install.packages("pROC");         library("pROC")
 if(!require("e1071"))         install.packages("e1071");        library("e1071")
-if(!require("randomforest"))  install.packages("randomforest"); library("randomforest")
+if(!require("randomForest"))  install.packages("randomForest"); library("randomForest")
 if(!require("hmeasure"))      install.packages("hmeasure");     library("hmeasure")
 if(!require("repmis"))        install.packages("repmis");       library("repmis")
 
