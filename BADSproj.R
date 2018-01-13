@@ -23,6 +23,8 @@ if(!require("e1071"))         install.packages("e1071");        library("e1071")
 if(!require("randomForest"))  install.packages("randomForest"); library("randomForest")
 if(!require("hmeasure"))      install.packages("hmeasure");     library("hmeasure")
 if(!require("repmis"))        install.packages("repmis");       library("repmis")
+if(!require("ggplot2"))       install.packages("ggplot2");      library("ggplot2")
+if(!require("eeptools"))      install.packages("eeptools");     library("eeptools")
 
 # ---- Load Data ----
 githubURL <- "https://raw.githubusercontent.com/KaiRstudio/BRSK/master/BADS_WS1718_known_MODEL_FITTING.csv"
@@ -62,20 +64,20 @@ Z.outlier <- function(x){
 # ---- Order Item ID ----
 table(is.na(daten$order_item_id))
 
-# ---- Dates ----
-daten$delivery_time <- daten$delivery_date - daten$order_date
-daten$delivery.time_factor[is.na(daten$delivery_time)]<-"neverReturned"
-daten$delivery.time_factor[daten$delivery_time<0]<-"rarelyReturned"
-daten$delivery.time_factor[daten$delivery_time>=0]<-"returnedHalfTheTime" 
-daten$delivery.time_factor<- as.factor(daten$delivery.time_factor)
-#daten$delivery_date[daten$delivery_date == "1990-12-31"] <- NA # remove unrealistic times
-#daten$delivery_date[daten$order_date>daten$delivery_date] <-NA
+# ---- Dates & TIMES ----
+daten$delivery_time <- as.numeric(daten$delivery_date - daten$order_date)
+# daten$delivery.time_factor[is.na(daten$delivery_time)]<-"neverReturned"
+# daten$delivery.time_factor[daten$delivery_time<0]<-"rarelyReturned"
+# daten$delivery.time_factor[daten$delivery_time>=0]<-"returnedHalfTheTime" 
+# daten$delivery.time_factor<- as.factor(daten$delivery.time_factor)
+daten$delivery_date[daten$delivery_date == "1990-12-31"] <- NA # remove unrealistic times
+daten$delivery_date[daten$order_date>daten$delivery_date] <-NA
 daten$order_month <- as.factor(months(daten$order_date)) # new column with month of delivery
-#daten$delivery_time <- Z.outlier(daten$delivery_time) # removing outliers from delivery time
-# MED_delivery <- round( median (daten$delivery_time, na.rm =TRUE)) # round( mean (daten$delivery_time, na.rm =TRUE)) gives median of 4 and mean of 11 for delivery time
-# daten$delivery_date[is.na(daten$delivery_date)]<- daten$order_date[is.na(daten$delivery_date)] + MED_DEL
-# daten$delivery_time[is.na(daten$delivery_time)] <- MED_DEL
-daten$regorderdiff <- daten$order_date - daten$user_reg_date
+# daten$delivery_time <- Z.outlier(daten$delivery_time) # removing outliers from delivery time
+MED_delivery <- round( median (daten$delivery_time, na.rm =TRUE)) # round( mean (daten$delivery_time, na.rm =TRUE)) gives median of 4 and mean of 11 for delivery time
+daten$delivery_date[is.na(daten$delivery_date)]<- daten$order_date[is.na(daten$delivery_date)] + MED_DEL
+daten$delivery_time[is.na(daten$delivery_time)] <- MED_DEL
+daten$regorderdiff <- as.numeric(daten$order_date - daten$user_reg_date)
 hist(as.numeric(daten$regorderdiff)) # many people that registered and immediately bought, the rest is equally distributed up until 774 days
 #max(daten$delivery_time, na.rm =TRUE) # delivery has to be timely after order date, the max is 151 days
 #min(daten$delivery_time, na.rm =TRUE) # check that minimal delivery time is zero
@@ -163,3 +165,4 @@ missmap(daten, main = "Missing values vs observed") # to give a plot of the miss
 # 8)  was is on purpose that user title and user state have not been class-transformed?
 # 9) do we really want to put all titles other than MRS as "other" ?
 # 10) division into rarely returned/never returned should rather not be included
+# 11) items with price zero should not be available to be returned as it would costwise not make sense. they should not simply be put as NAs
