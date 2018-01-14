@@ -74,7 +74,7 @@ daten$delivery_date[daten$delivery_date == "1990-12-31"] <- NA # remove unrealis
 daten$delivery_date[daten$order_date>daten$delivery_date] <-NA
 daten$order_month <- as.factor(months(daten$order_date)) # new column with month of delivery
 # daten$delivery_time <- Z.outlier(daten$delivery_time) # removing outliers from delivery time
-MED_delivery <- round( median (daten$delivery_time, na.rm =TRUE)) # round( mean (daten$delivery_time, na.rm =TRUE)) gives median of 4 and mean of 11 for delivery time
+MED_DEL <- round( median (daten$delivery_time, na.rm =TRUE)) # round( mean (daten$delivery_time, na.rm =TRUE)) gives median of 4 and mean of 11 for delivery time
 daten$delivery_date[is.na(daten$delivery_date)]<- daten$order_date[is.na(daten$delivery_date)] + MED_DEL
 daten$delivery_time[is.na(daten$delivery_time)] <- MED_DEL
 daten$regorderdiff <- as.numeric(daten$order_date - daten$user_reg_date)
