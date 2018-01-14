@@ -166,3 +166,4 @@ missmap(daten, main = "Missing values vs observed") # to give a plot of the miss
 # 9) do we really want to put all titles other than MRS as "other" ?
 # 10) division into rarely returned/never returned should rather not be included
 # 11) items with price zero should not be available to be returned as it would costwise not make sense. they should not simply be put as NAs
+# 12) text should include that when you are the shopowner and you set up this analysis, some open questions could be answered with more background knowlegde
