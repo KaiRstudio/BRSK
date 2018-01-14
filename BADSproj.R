@@ -123,6 +123,10 @@ daten$item_price[is.na(daten$item_price)] <- med_item_price
 
 # ---- User ID ----
 
+#------The number of items user bought within the same day
+
+daten<-join(daten, count(daten, c("order_date", "user_id")))
+
 # ---- Title ----
 daten$user_title[daten$user_title == "not reported"] <- NA # remove not reported titles
 daten$user_title <- as.character(daten$user_title)
