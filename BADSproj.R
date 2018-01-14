@@ -78,6 +78,10 @@ MED_DEL <- round( median (daten$delivery_time, na.rm =TRUE)) # round( mean (date
 daten$delivery_date[is.na(daten$delivery_date)]<- daten$order_date[is.na(daten$delivery_date)] + MED_DEL
 daten$delivery_time[is.na(daten$delivery_time)] <- MED_DEL
 daten$regorderdiff <- as.numeric(daten$order_date - daten$user_reg_date)
+
+daten$delivery_time2 <- scale(daten$delivery_time)
+daten$regorderdiff2 <- scale(daten$regorderdiff)
+
 hist(as.numeric(daten$regorderdiff)) # many people that registered and immediately bought, the rest is equally distributed up until 774 days
 #max(daten$delivery_time, na.rm =TRUE) # delivery has to be timely after order date, the max is 151 days
 #min(daten$delivery_time, na.rm =TRUE) # check that minimal delivery time is zero
@@ -119,8 +123,9 @@ daten$pricecat <- cut(daten$pricecat,c(-1, 0, 20, 50, 100, 200, 400), labels=c(N
 daten$item_price[daten$item_price == 0] <-NA
 med_item_price <- median(daten$item_price, na.rm=TRUE)
 daten$item_price[is.na(daten$item_price)] <- med_item_price
-#daten$item_price <- Z.outlier(daten$item_price) #Are we sure that 399.95 is outlier?
 
+daten$item_price2 <- scale(daten$item_price)
+#daten$item_price <- Z.outlier(daten$item_price) #Are we sure that 399.95 is outlier?
 # ---- User ID ----
 
 #------The number of items user bought within the same day
@@ -141,6 +146,7 @@ daten$age[is.na(daten$age)] <- med.age
 daten$age <- Z.outlier(daten$age)
 
 daten$agecat <- recode(daten$age, "0:27='18-27';28:37='28-37'; 38:47='38-47'; 48:57='48-57'; 58:67='58-67'; 68:77='68-77'; 78:87='78-87'; 88:100='88-100'")
+daten$age2 <- scale(daten$age)
 
 table(daten$agecat)
 summary(daten$age)
