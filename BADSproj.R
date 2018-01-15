@@ -82,6 +82,7 @@ daten$regorderdiff <- as.numeric(daten$order_date - daten$user_reg_date)
 daten$delivery_time2 <- as.numeric(scale(daten$delivery_time))
 daten$regorderdiff2 <- as.numeric(scale(daten$regorderdiff))
 
+plot(daten$order_month)
 hist(as.numeric(daten$regorderdiff)) # many people that registered and immediately bought, the rest is equally distributed up until 774 days
 #max(daten$delivery_time, na.rm =TRUE) # delivery has to be timely after order date, the max is 151 days
 #min(daten$delivery_time, na.rm =TRUE) # check that minimal delivery time is zero
