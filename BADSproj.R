@@ -70,8 +70,8 @@ daten$delivery_time <- as.numeric(daten$delivery_date - daten$order_date)
 # daten$delivery.time_factor[daten$delivery_time<0]<-"rarelyReturned"
 # daten$delivery.time_factor[daten$delivery_time>=0]<-"returnedHalfTheTime" 
 # daten$delivery.time_factor<- as.factor(daten$delivery.time_factor)
-daten$delivery_date[daten$delivery_date == "1990-12-31"] <- NA # remove unrealistic times
-daten$delivery_date[daten$order_date>daten$delivery_date] <-NA
+daten$delivery_date[daten$delivery_date == "1990-12-31"] <- NA # remove unrealistic times "manually"
+daten$delivery_date[daten$order_date>daten$delivery_date] <-NA # remove unrealistic times "automatically"
 daten$order_month <- as.factor(months(daten$order_date)) # new column with month of delivery
 # daten$delivery_time <- Z.outlier(daten$delivery_time) # removing outliers from delivery time
 MED_DEL <- round( median (daten$delivery_time, na.rm =TRUE)) # round( mean (daten$delivery_time, na.rm =TRUE)) gives median of 4 and mean of 11 for delivery time
