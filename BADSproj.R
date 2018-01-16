@@ -4,7 +4,7 @@
 #   - Kai Dessau          (559766)  ~ kai-dessau@web.de
 
 # ---- Packages ----
-if(!require("plyr"))          install.packages("plyr");         library("plyr")
+if(!require("plyr"))          install.packages("plyr");         library("plyr")         
 if(!require("dplyr"))         install.packages("dplyr");        library("dplyr")
 if(!require("stringdist"))    install.packages("stringdist");   library("stringdist")
 if(!require("rpart"))         install.packages("rpart");        library("rpart")
@@ -23,10 +23,14 @@ if(!require("e1071"))         install.packages("e1071");        library("e1071")
 if(!require("randomForest"))  install.packages("randomForest"); library("randomForest")
 if(!require("hmeasure"))      install.packages("hmeasure");     library("hmeasure")
 if(!require("repmis"))        install.packages("repmis");       library("repmis")
+if(!require("neuralnet"))     install.packages("neuralnet");    library("neuralnet") 
+if(!require("penalized"))     install.packages("penalized");    library("penalized")
+if(!require("xgboost"))       install.packages("xgboost");    library("xgboost")
+
 
 # ---- Load Data ----
 githubURL <- "https://raw.githubusercontent.com/KaiRstudio/BRSK/master/BADS_WS1718_known_MODEL_FITTING.csv"
-daten <- source_data(githubURL, sha1 ="254e37cf5b7fe121e2e9c8212803cda9415c9de7", header = "auto", sep=",")
+daten <- source_data(githubURL, sha1="254e37cf5b7fe121e2e9c8212803cda9415c9de7", header = "auto", sep=",")
 #sha1 is the hash to make sure data hasnt changed
 formatofdate        <- "%Y-%m-%d"
 daten$order_date    <- as.Date(daten$order_date, format = formatofdate)
@@ -64,12 +68,15 @@ table(is.na(daten$order_item_id))
 
 # ---- Dates ----
 daten$delivery_time <- daten$delivery_date - daten$order_date
-daten$delivery.time_factor[is.na(daten$delivery_time)]<-"neverReturned"
-daten$delivery.time_factor[daten$delivery_time<0]<-"rarelyReturned"
-daten$delivery.time_factor[daten$delivery_time>=0]<-"returnedHalfTheTime" 
-daten$delivery.time_factor<- as.factor(daten$delivery.time_factor)
+
+#daten$delivery.time_factor[is.na(daten$delivery_time)]<-"neverReturned"
+#daten$delivery.time_factor[daten$delivery_time<0]<-"rarelyReturned"
+#daten$delivery.time_factor[daten$delivery_time>=0]<-"returnedHalfTheTime" 
+#daten$delivery.time_factor<- as.factor(daten$delivery.time_factor)
 #daten$delivery_date[daten$delivery_date == "1990-12-31"] <- NA # remove unrealistic times
 #daten$delivery_date[daten$order_date>daten$delivery_date] <-NA
+# remove unrealistic delivery_time
+daten$delivery_time[daten$delivery_time<0] <- NA
 daten$order_month <- as.factor(months(daten$order_date)) # new column with month of delivery
 #daten$delivery_time <- Z.outlier(daten$delivery_time) # removing outliers from delivery time
 # MED_delivery <- round( median (daten$delivery_time, na.rm =TRUE)) # round( mean (daten$delivery_time, na.rm =TRUE)) gives median of 4 and mean of 11 for delivery time
