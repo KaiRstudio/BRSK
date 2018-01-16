@@ -1,3 +1,5 @@
+if(!require("repmis")) install.packages("repmis");library("repmis")
+
 source("https://raw.githubusercontent.com/KaiRstudio/BRSK/master/BADSproj.R") # loads and cleans data
 
 source("https://raw.githubusercontent.com/KaiRstudio/BRSK/master/VarSel.R")   # uses VARIABLE SELECTION code
