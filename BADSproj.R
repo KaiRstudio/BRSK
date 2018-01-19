@@ -64,42 +64,48 @@ Z.outlier <- function(x){
   return(x)}
 
 
-# ---- Order Item ID ----
-table(is.na(daten$order_item_id))
-
 # ---- Dates & TIMES ----
-daten$delivery_time <- as.numeric(daten$delivery_date - daten$order_date)
-# daten$delivery.time_factor[is.na(daten$delivery_time)]<-"neverReturned"
-# daten$delivery.time_factor[daten$delivery_time<0]<-"rarelyReturned"
-# daten$delivery.time_factor[daten$delivery_time>=0]<-"returnedHalfTheTime" 
-# daten$delivery.time_factor<- as.factor(daten$delivery.time_factor)
-daten$delivery_date[daten$delivery_date == "1990-12-31"] <- NA # remove unrealistic times "manually"
-daten$delivery_date[daten$order_date>daten$delivery_date] <-NA # remove unrealistic times "automatically"
-daten$order_month <- as.factor(months(daten$order_date)) # new column with month of delivery
-# daten$delivery_time <- Z.outlier(daten$delivery_time) # removing outliers from delivery time
-MED_DEL <- round( median (daten$delivery_time, na.rm =TRUE)) # round( mean (daten$delivery_time, na.rm =TRUE)) gives median of 4 and mean of 11 for delivery time
-daten$delivery_date[is.na(daten$delivery_date)]<- daten$order_date[is.na(daten$delivery_date)] + MED_DEL
-daten$delivery_time[is.na(daten$delivery_time)] <- MED_DEL
-daten$regorderdiff <- as.numeric(daten$order_date - daten$user_reg_date)
 
+# Clean Date
+daten$delivery_date[daten$order_date>daten$delivery_date] <-NA # remove unrealistic times "automatically"
+
+
+# Create new Date dependend variables (cleaned)
+daten$order_month <- as.factor(months(daten$order_date)) # new column with month of delivery
+#MED_DEL <- round( median (daten$delivery_time, na.rm =TRUE)) # round( mean (daten$delivery_time, na.rm =TRUE)) gives median of 4 and mean of 11 for delivery time
+#daten$delivery_date[is.na(daten$delivery_date)]<- daten$order_date[is.na(daten$delivery_date)] + MED_DEL
+#daten$delivery_time[is.na(daten$delivery_time)] <- MED_DEL
+daten$delivery_time <- Z.outlier(as.numeric(daten$delivery_date - daten$order_date))
+daten$regorderdiff <- as.numeric(daten$order_date - daten$user_reg_date) ## makes sense?
+
+
+# Scaled variables
 daten$delivery_time2 <- as.numeric(scale(daten$delivery_time))
 daten$regorderdiff2 <- as.numeric(scale(daten$regorderdiff))
 
-plot(daten$order_month)
-hist(as.numeric(daten$regorderdiff)) # many people that registered and immediately bought, the rest is equally distributed up until 774 days
-#max(daten$delivery_time, na.rm =TRUE) # delivery has to be timely after order date, the max is 151 days
-#min(daten$delivery_time, na.rm =TRUE) # check that minimal delivery time is zero
-#hist(daten$delivery_time) # Histogram of delivery_time
-#sum(is.na(daten$delivery_date)) # should be zero
+
+
 # ---- Item ID ----
+
+
+
 
 # ---- Size ----
 daten$item_size <- factor(toupper(daten$item_size))
-table_size <- table(daten$item_size)
-levels(daten$item_size) <- c(names(table_size), "Other")
-daten$item_size[is.na(daten$item_size)] <- factor("Other")
-daten[daten$item_size %in% names(table_size)[table_size < 100],"item_size"] <- factor("Other")
+#table_size <- table(daten$item_size)
+levels(daten$item_size) <- c(levels(daten$item_size), "Other")
+#daten$item_size[is.na(daten$item_size)] <- factor("Other")
+daten$item_size <- ifelse(daten$item_size %in% 
+                            names(prop.table(table(daten$item_size))
+                                  [prop.table(table(daten$item_size))>= 0.01]),
+                          daten$item_size, "Other")
+
 daten$item_size <- factor(daten$item_size)
+table(daten$item_size)
+prop.table(table(daten$item_size))
+
+
+
 # ---- Color ----
 table_col_clust <- table(daten$item_color)
 levels(daten$item_color) <- c(names(table_col_clust), "Other")
