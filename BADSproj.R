@@ -151,6 +151,7 @@ daten$item_price[daten$item_price <= 0] <- NA
 
 
 
+
 # ---- Title ----
 levels(daten$user_title) <- c(levels(factor(daten$user_title)),"Other")
 daten$user_title[daten$user_title != "Mrs" & daten$user_title != "Mr"] <- factor("Other")
@@ -196,7 +197,7 @@ daten$age <- Z.outlier(daten$age)
 
 
 # ---- The number of items user bought within the same day ----
-daten <- join(daten, count(daten, c("order_date", "user_id")))
+daten <- join(daten, count(daten, order_date, user_id),by = c("order_date", "user_id"))
 
 
 
@@ -255,13 +256,6 @@ barplot(woe.values$woe$user_state)
 
 
 
-
-
-
-
-
-
-daten[daten$order_date < daten$user_reg_date]
 summary(daten)
 str(daten)
 
