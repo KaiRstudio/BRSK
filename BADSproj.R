@@ -149,7 +149,7 @@ daten$item_price2 <- as.numeric(scale(daten$item_price))
 
 
 # ---- The number of items user bought within the same day ----
-daten <- join(daten, count(daten, c("order_date", "user_id")))
+daten <- join(daten, count(daten, order_date, user_id),by = c("order_date", "user_id"))
 
 
 
