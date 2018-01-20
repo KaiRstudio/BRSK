@@ -126,7 +126,6 @@ daten$item_size <- factor(daten$item_size)
 # ---- Color ----
 levels(daten$item_color) <- c(levels(factor(daten$item_color)), "Other")
 daten$item_color <- agg.col(daten$item_color)
-table(daten$item_color) 
 
 
 
@@ -136,8 +135,6 @@ table(daten$item_color)
 
 # ---- Price ----
 daten$item_price[daten$item_price <= 0] <- NA
-# daten$pricecat <- daten$item_price
-# daten$pricecat <- cut(daten$pricecat,c(-1, 0, 20, 50, 100, 200, 400), labels=c(NA, "0-20", "20-50", "50-100", "100-200", "200-400"))
 # med_item_price <- median(daten$item_price, na.rm=TRUE)
 # daten$item_price[is.na(daten$item_price)] <- med_item_price
 
@@ -170,9 +167,9 @@ daten$user_title <- factor(daten$user_title)
 
 
 
-# ----------------------- New Variables
+# ----------------------- New variables
 
-# ---- 1-3: Date variables ----
+# ---- Delivery Time/Month ----
 daten$order_month <- as.factor(months(daten$order_date)) # new column with month of delivery
 daten$delivery_time <- Z.outlier(as.numeric(daten$delivery_date - daten$order_date))
 daten$regorderdiff <- as.numeric(daten$order_date - daten$user_reg_date) ## makes sense?
@@ -187,18 +184,26 @@ daten$regorderdiff2 <- as.numeric(scale(daten$regorderdiff))
 
 
 
-# ---- 4: Customer age ----
+# ---- Customer age ----
 daten$age <- age(daten$user_dob,daten$order_date)
 daten$age <- Z.outlier(daten$age)
 #med.age <- round(median(daten$age, na.rm = TRUE))
 #daten$age[is.na(daten$age)] <- med.age
-#daten$agecat <- recode(daten$age, "0:27='18-27';28:37='28-37'; 38:47='38-47'; 48:57='48-57'; 58:67='58-67'; 68:77='68-77'; 78:87='78-87'; 88:100='88-100'")
 #daten$age2 <- as.numeric(scale(daten$age))
 
 
 
+# ---- Number of items in a basket ----
 
 
+
+# ---- Count same item (with different size/color) in same basket ----
+
+
+
+# ---- Customers past return rates ----
+
+# ----------------------- End new variables
 
 
 
