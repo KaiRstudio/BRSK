@@ -33,6 +33,9 @@ if(!require("xgboost"))       install.packages("xgboost");      library("xgboost
 if(!require("penalized"))     install.packages("penalized");    library("penalized")
 if(!require("neuralnet"))     install.packages("neuralnet");    library("neuralnet")
 
+if(!require("woeBinning"))     install.packages("woeBinning");    library("woeBinning")
+if(!require("klaR"))     install.packages("klaR");    library("klaR")
+
 
 
 
@@ -74,7 +77,7 @@ age <- function(from, to) {
     to_lt$mon < from_lt$mon |
       (to_lt$mon == from_lt$mon & to_lt$mday < from_lt$mday),
     age - 1,
-    age)} 
+    age)} ## why not just use difference between order date and yob?
 
 
 # - Exclude Outlier by Z-Score -
@@ -88,7 +91,7 @@ Z.outlier <- function(x){
 # - Aggregate color levels -
 agg.col <- function (df.col) {
   df.col <- factor(df.col)
-  df.col <- ifelse(df.col %in% c("?"), NA,
+  df.col <- ifelse(df.col %in% c("?"), "Other",
                              ifelse(df.col %in% c("petrol", "blau", "blue", "azure", "cobalt blue", "dark navy", "darkblue", "turquoise", "silver", "navy", "aqua", "aquamarine", "baltic blue", "darkblue"), "blue",
                                     ifelse(df.col %in% c("red", "orange", "purple", "currant purple", "pink", "antique pink", "crimson", "bordeaux", "berry", "fuchsia", "perlmutt", "coral", "hibiscus", "magenta", "terracotta", "dark garnet"), "red",
                                            ifelse(df.col %in% c("green", "olive", "oliv", "dark oliv", "mint", "aubergine", "lemon", "nature", "khaki", "avocado", "jade"), "green",
@@ -101,9 +104,7 @@ agg.col <- function (df.col) {
 
 
 
-# ----------------------- Prep Existing Variables
-
-
+# ----------------------- Start: Prep Existing Variables
 
 # ---- Dates ----
 daten$delivery_date[daten$order_date>daten$delivery_date] <-NA
@@ -138,18 +139,15 @@ daten$item_price[daten$item_price <= 0] <- NA
 # med_item_price <- median(daten$item_price, na.rm=TRUE)
 # daten$item_price[is.na(daten$item_price)] <- med_item_price
 
+
 # - Scale Price -
-daten$item_price2 <- as.numeric(scale(daten$item_price))
+#daten$item_price2 <- as.numeric(scale(daten$item_price))
 #daten$item_price <- Z.outlier(daten$item_price) #Are we sure that 399.95 is outlier?
 
 
 
 # ---- User ID ----
 
-
-
-# ---- The number of items user bought within the same day ----
-daten <- join(daten, count(daten, c("order_date", "user_id")))
 
 
 
@@ -162,12 +160,12 @@ daten$user_title <- factor(daten$user_title)
 
 # ---- User State ----
 
-# ----------------------- End existing variable prep
+# ----------------------- End: Existing variable prep
 
 
 
 
-# ----------------------- New variables
+# ----------------------- Start: New variables
 
 # ---- Delivery Time/Month ----
 daten$order_month <- as.factor(months(daten$order_date)) # new column with month of delivery
@@ -179,8 +177,8 @@ daten$regorderdiff <- as.numeric(daten$order_date - daten$user_reg_date) ## make
 #daten$delivery_time[is.na(daten$delivery_time)] <- MED_DEL
 
 # Scaled date variables
-daten$delivery_time2 <- as.numeric(scale(daten$delivery_time))
-daten$regorderdiff2 <- as.numeric(scale(daten$regorderdiff))
+#daten$delivery_time2 <- as.numeric(scale(daten$delivery_time))
+#daten$regorderdiff2 <- as.numeric(scale(daten$regorderdiff))
 
 
 
@@ -197,16 +195,75 @@ daten$age <- Z.outlier(daten$age)
 
 
 
-# ---- Count same item (with different size/color) in same basket ----
+# ---- The number of items user bought within the same day ----
+daten <- join(daten, count(daten, c("order_date", "user_id")))
 
 
 
 # ---- Customers past return rates ----
 
-# ----------------------- End new variables
+# ----------------------- End: New variables
 
 
 
+
+# ----------------------- Start: Drop non relevant variables
+
+drops <- c("order_item_id",
+           "delivery_date",
+           "user_reg_date")
+daten <- daten[,!(names(daten) %in% drops)]
+
+# ----------------------- End: Drop non relevant variables
+
+
+
+
+# ----------------------- Start: Binning and WoE
+
+# ---- Binning ----
+#binning <- woe.binning (df=daten, target.var="return", pred.var=c("delivery_time"), min.perc.class = 0.01)
+#woe.binning.plot(binning)
+#woe.binning.table(binning)
+
+
+
+# ---- WoE ----
+# to avoid overfitting: split a woe training set from the overall training set
+set.seed(222)
+idx.train <- createDataPartition(y = daten$return, p = 0.75, list = FALSE) # Draw a random, stratified sample including p percent of the data
+test <-  daten[-idx.train, ] # test set
+train <- daten[idx.train, ] # training set
+## tapply (woe.train$user_state, woe.train$return, summary)
+tapply(train$user_title, train$return, summary)
+##if there is the prob of zero in one level for return/non-return, function does not work -> zeroadj
+data <- train[, sapply(train, is.factor)]
+data <- data[, -1]
+woe.values <- woe(return ~ ., data=train, zeroadj=0.1)
+## weights for each factor
+woe.values$woe
+# note: klaR assumes the first level of target to be the target level (WoE refer to no returns)
+## transformed version (variables have been replaced with woe)
+summary(woe.values$xnew)
+## replacement
+test.woe <- predict(woe.values, newdata=test, replace=TRUE)
+summary(test.woe)
+## check for plausibility by plotting weights against their levels
+barplot(woe.values$woe$user_state)
+
+# ----------------------- End Binning & WoE
+
+
+
+
+
+
+
+
+
+daten[daten$order_date < daten$user_reg_date]
+summary(daten)
+str(daten)
 
 
 missmap(daten, main = "Missing values vs observed") # to give a plot of the missing values per variable
