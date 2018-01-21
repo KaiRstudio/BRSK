@@ -1,16 +1,26 @@
 # file for variable selection
+# we still have to decide which filter we will use 
+# probably IV and caret ?
 
-# read pre-processed data
+# ----------------------- read pre-processed data
 source("BADSproj.R")
+# ----------------------- 
+
+
 
   
-# ---- WoE Variables: Information Value (IV) ----
+# ----------------------- WoE Variables: Information Value (IV)
 
 woe.values$IV
-test.woe$
+highIV_col <- names(woe.values$IV[woe.values$IV >0.02])
+highIV_col <- c(highIV_col,"return")
+
+# ----------------------- 
 
 
-# ---- Remaining Numerical Variables: Fisher-Score ----
+
+
+# ----------------------- Remaining Numerical Variables: Fisher-Score
 
 # function
 fisherScore <- function (feature, targetVariable)
@@ -25,11 +35,12 @@ fisherScore <- function (feature, targetVariable)
 # apply to numeric variables:
 fisher_scores <- apply(train[,sapply(train, is.numeric)], 2, fisherScore, train$return)
 fisher_scores 
+# ----------------------- 
 
 
 
 
-# ---- Categorical: Cramer’s V  ----
+# ----------------------- Categorical: Cramer’s V
 
 # function
 cv.test = function(x,y) {
@@ -40,7 +51,7 @@ cv.test = function(x,y) {
 }
 
 # apply to categorical variables
-  
+
   # I think it makes sense to apply WoE to all categorcial variables
 
 
@@ -51,9 +62,13 @@ cv.test = function(x,y) {
 # not predictive: fischer_score < 0.015
 # <0.02: not predictive; 0.02-0.1: weak, 0.1-0.3: medium, >0.3 strong IV
 
+# ----------------------- 
 
 
-# ---- FROM EXERCICE ----
+
+
+# ----------------------- Find correlation with caret
+
 ### Add-on: Efficient removal of highly correlated features with carets findCorrelation() ####
 # Identify variables which should be efficiently removed so that no
 # correlation exceeds threshold
@@ -63,14 +78,15 @@ correlatedVars <- caret::findCorrelation(cutoff = 0.5, names = TRUE, x = varCorr
 if(length(correlatedVars)>0){
   print(paste0("Highly correlated variables: ", paste(correlatedVars, collapse = " ")))
 }
-### ----------------
+# ----------------------- 
 
-train.filtered <- train[(...)]
+train.filtered <- train[,highIV_col]
+# numerical variables are missing --> need to add
+?findCorrelation
 
 
 
-
-# ---- Wrapper Approach ----
+# ----------------------- Wrapper Approach
 
 library(mlr)
 
@@ -110,4 +126,4 @@ featureSelectionXGB
 
 # remove irrelevant variables from dataset for each model respectively
 
-?
+

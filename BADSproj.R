@@ -225,7 +225,9 @@ sena<-count.duplicates(rate)
 
 drops <- c("order_item_id",
            "delivery_date",
-           "user_reg_date")
+           "user_reg_date",
+           "user_dob",
+           "order_date")
 daten <- daten[,!(names(daten) %in% drops)]
 
 # ----------------------- End: Drop non relevant variables
@@ -249,10 +251,25 @@ idx.train <- createDataPartition(y = daten$return, p = 0.75, list = FALSE) # Dra
 test <-  daten[-idx.train, ] # test set
 train <- daten[idx.train, ] # training set
 ## tapply (woe.train$user_state, woe.train$return, summary)
+tapply(train$item_id, train$return, summary)
+tapply(train$item_size, train$return, summary)
+tapply(train$item_color, train$return, summary)
+tapply(train$brand_id, train$return, summary)
+tapply(train$item_price, train$return, summary)
+tapply(train$user_id, train$return, summary)
 tapply(train$user_title, train$return, summary)
+tapply(train$user_state, train$return, summary)
+tapply(train$order_month, train$return, summary)
+tapply(train$delivery_time, train$return, summary)
+tapply(train$regorderdiff, train$return, summary)
+tapply(train$age, train$return, summary)
+tapply(train$user_title, train$return, summary)
+tapply(train$ct_basket_size, train$return, summary)
+tapply(train$ct_same_items, train$return, summary)
+
 ##if there is the prob of zero in one level for return/non-return, function does not work -> zeroadj
 data <- train[, sapply(train, is.factor)]
-data <- data[, -1]
+#data <- data[, -1]
 woe.values <- woe(return ~ ., data=train, zeroadj=0.1)
 ## weights for each factor
 woe.values$woe
@@ -263,7 +280,8 @@ summary(woe.values$xnew)
 test.woe <- predict(woe.values, newdata=test, replace=TRUE)
 summary(test.woe)
 ## check for plausibility by plotting weights against their levels
-barplot(woe.values$woe$user_state)
+# *-1 because woe predicts how probable 0 appears, not how probable 1 is
+barplot(-1*woe.values$woe$user_state)
 
 # ----------------------- End Binning & WoE
 
