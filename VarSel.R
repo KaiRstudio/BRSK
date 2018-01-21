@@ -68,6 +68,15 @@ cv.test = function(x,y) {
 
 
 # ----------------------- Find correlation with caret
+# Multicollinearity
+library(caret)
+numeric_columns = c("price", "tax", "order_date_day", "order_date_month", "delivery_time")
+# these columns also contain N/A values --> the option "pairwise.complete.obs" should be used
+numeric_columns_correlation = cor(training_data[, numeric_columns], use="pairwise.complete.obs")
+numeric_columns_correlation
+# works for non-N/A only (remove N/A rows or fill with mean, median, etc)
+high_cor_columns = findCorrelation(numeric_columns_correlation)
+high_cor_columns
 
 ### Add-on: Efficient removal of highly correlated features with carets findCorrelation() ####
 # Identify variables which should be efficiently removed so that no

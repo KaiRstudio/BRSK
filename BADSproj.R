@@ -87,14 +87,14 @@ Z.outlier <- function(x){
   x[Zscore <(-3)] <- NA
   return(x)}
 
+
 #-Duplicated rows
 count.duplicates <- function(DF){
   x <- do.call('paste', c(DF, sep = '\r'))
   ox <- order(x)
   rl <- rle(x[ox])
-  cbind(DF[ox[cumsum(rl$lengths)],,drop=FALSE],count = rl$lengths)
-  
-}
+  cbind(DF[ox[cumsum(rl$lengths)],,drop=FALSE],count = rl$lengths)}
+
 
 # - Aggregate color levels -
 agg.col <- function (df.col) {
@@ -106,8 +106,7 @@ agg.col <- function (df.col) {
                                                   ifelse(df.col %in% c("mocca", "brwon", "brown", "beige", "kanel", "mahagoni", "copper coin", "cognac", "caramel"),"brown",
                                                          ifelse(df.col %in% c("apricot", "yellow", "vanille", "gold", "ingwer", "white", "mango", "almond", "champagner", "creme", "curry", "ivory", "ocher"), "yellow",
                                                                 ifelse(df.col %in% c("grey", "black", "dark grey", "graphite", "iron", "habana", "ebony", "amethyst", "basalt", "ash", "ancient", "anthracite", "denim", "dark denim"), "dark", "Other")))))))
-  df.col <- factor(df.col)
-}
+  df.col <- factor(df.col)}
 
 
 
@@ -147,7 +146,6 @@ daten$item_price[daten$item_price <= 0] <- NA
 # med_item_price <- median(daten$item_price, na.rm=TRUE)
 # daten$item_price[is.na(daten$item_price)] <- med_item_price
 
-
 # - Scale Price -
 #daten$item_price2 <- as.numeric(scale(daten$item_price))
 #daten$item_price <- Z.outlier(daten$item_price) #Are we sure that 399.95 is outlier?
@@ -175,7 +173,7 @@ daten$user_title <- factor(daten$user_title)
 
 # ----------------------- Start: New variables
 
-# ---- Delivery Time/Month ----
+# ---- Date dependent variables ----
 daten$order_month <- as.factor(months(daten$order_date)) # new column with month of delivery
 daten$delivery_time <- Z.outlier(as.numeric(daten$delivery_date - daten$order_date))
 daten$regorderdiff <- as.numeric(daten$order_date - daten$user_reg_date) ## makes sense?
@@ -250,7 +248,7 @@ set.seed(222)
 idx.train <- createDataPartition(y = daten$return, p = 0.75, list = FALSE) # Draw a random, stratified sample including p percent of the data
 test <-  daten[-idx.train, ] # test set
 train <- daten[idx.train, ] # training set
-## tapply (woe.train$user_state, woe.train$return, summary)
+
 tapply(train$item_id, train$return, summary)
 tapply(train$item_size, train$return, summary)
 tapply(train$item_color, train$return, summary)
@@ -294,6 +292,12 @@ str(daten)
 missmap(daten, main = "Missing values vs observed") # to give a plot of the missing values per variable
 
 # ---- IDEAS & OPEN QUESTIONS ----
+
+#    I If a nominal or ordinal column in the test data set contains more levels than the corresponding column in the training data set, you can add levels to the column in the training data set manually using the following command:
+#     training_data$salutation = factor(training_data$salutation, levels=c(levels(training_data$salutation), "Family"))
+#   II Weekday?
+#  III Clever to bin delivery time? More than a week will appear huge to the customer, no matter how long exact
+
 # 1)  In case someone buys more stuff at once, the whole thing should obviously not be 
 #     discouraged because one or two items are likely to be returned
 #     rather try to get the one item out of the cart
