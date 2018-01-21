@@ -193,11 +193,14 @@ daten$age <- Z.outlier(daten$age)
 
 
 # ---- Number of items in a basket ----
-
-
-
-# ---- The number of items user bought within the same day ----
 daten <- join(daten, count(daten, order_date, user_id),by = c("order_date", "user_id"))
+
+
+
+# ---- The number of same item user bought within the same basket ----
+daten <- join(daten, count(daten, order_date, user_id, item_id),by = c("order_date", "user_id","item_id"))
+names(daten)[names(daten) == "n"] <- "ct_basket_size"
+names(daten)[names(daten) == "nn"] <- "ct_same_items"
 
 
 

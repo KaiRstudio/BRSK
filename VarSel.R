@@ -1,14 +1,13 @@
 # file for variable selection
 
 # read pre-processed data
+source("BADSproj.R")
 
-?
-  
   
 # ---- WoE Variables: Information Value (IV) ----
 
 woe.values$IV
-
+test.woe$
 
 
 # ---- Remaining Numerical Variables: Fisher-Score ----
