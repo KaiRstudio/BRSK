@@ -1,4 +1,10 @@
 # file for building models
+# For each model:
+# Parameter optimization (=Loops over parameters of model)
+# Loops over choice of variables
+# Training/Testing    
+# data splitting, model prediction, cross validation
+
 
 # ----------------------- Read Data Prep
 source("BADSproj.R")
@@ -6,18 +12,8 @@ source("BADSproj.R")
 
 
 # ----------------------- Packages
-if(!require("doParallel")) install.packages("doParallel"); library("doParallel") 
 if(!require("NeuralNetTools")) install.packages("NeuralNetTools"); library("NeuralNetTools")
 if(!require("caret"))         install.packages("caret");        library("caret")
-
-
-# ----------------------- Setup up parallel backend
-# Detect number of available clusters, which gives you the maximum number of "workers" your computer has
-nrOfCores <- detectCores()
-cl <- makeCluster( max(1,detectCores()-3))
-registerDoParallel(cl)
-message(paste("\n Registered number of cores:\n",getDoParWorkers(),"\n"))
-
 
 
 
@@ -40,11 +36,9 @@ rf.parms <- expand.grid(mtry = 1:10)
 
 # Train random forest rf with a 5-fold cross validation 
 # ntree set as default value 500
-rf.caret <- train(return~., data = train,
+rf.caret <- train(return~., data = train.filtered,
                   method = "rf", ntree = 500, tuneGrid = rf.parms, importance = TRUE,
                   metric = "ROC", trControl = model.control, na.action = na.omit)
-
-stopCluster(cl)
 
 
 # ----------------------- Gradient Boosting
@@ -86,18 +80,14 @@ nn_raw <- nnet(BAD~., data = train, # the data and formula to be used
 
 plotnet(nn, max_sp = TRUE)
 
+
+
+
+
 # ----------------------- Logistic Regression
 
-# Logistic Regression
-lr <- glm(return~.,
-          data = train,
-          family = binomial(link = "logit"))
-yhat[["lr"]] <- predict (lr, newdata = daten, type = "response")
-
-str(model.matrix(return~.-1, daten))
-
 # Regularized Logistic Regression
-indep.var <- model.matrix(return~.-1, daten) # Klappt das so? ? ? ? ? ? ?
+indep.var <- model.matrix(return~.-1, daten)
 dep.var <- daten$return
 lasso <- glmnet(x = indep.var, y = dep.var, family = "binomial", standardize = TRUE,
                 alpha = 1, nlambda = 100)
@@ -105,8 +95,4 @@ yhat["lasso"] <- as.vector( predict(lasso, newx = x, s = 0.001, type = "response
 
 # ----------------------- 
 
-# For each model:
-# Parameter optimization (=Loops over parameters of model)
-# Loops over choice of variables
-# Training/Testing    
-# data splitting, model prediction, cross validation
+

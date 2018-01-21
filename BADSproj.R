@@ -281,12 +281,10 @@ summary(test.woe)
 # *-1 because woe predicts how probable 0 appears, not how probable 1 is
 barplot(-1*woe.values$woe$user_state)
 
+train.woe <- predict(woe.values, newdata=train, replace=TRUE)
+
 # ----------------------- End Binning & WoE
 
-
-
-summary(daten)
-str(daten)
 
 
 missmap(daten, main = "Missing values vs observed") # to give a plot of the missing values per variable
@@ -297,6 +295,7 @@ missmap(daten, main = "Missing values vs observed") # to give a plot of the miss
 #     training_data$salutation = factor(training_data$salutation, levels=c(levels(training_data$salutation), "Family"))
 #   II Weekday?
 #  III Clever to bin delivery time? More than a week will appear huge to the customer, no matter how long exact
+#   IV Order nominal factors to receive ordinal?
 
 # 1)  In case someone buys more stuff at once, the whole thing should obviously not be 
 #     discouraged because one or two items are likely to be returned
