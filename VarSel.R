@@ -53,6 +53,19 @@ cv.test = function(x,y) {
 # <0.02: not predictive; 0.02-0.1: weak, 0.1-0.3: medium, >0.3 strong IV
 
 
+
+# ---- FROM EXERCICE ----
+### Add-on: Efficient removal of highly correlated features with carets findCorrelation() ####
+# Identify variables which should be efficiently removed so that no
+# correlation exceeds threshold
+varCorrelation <- cor(train[,sapply(train,is.numeric)]) # Make sure that the target variable is not included
+correlatedVars <- caret::findCorrelation(cutoff = 0.5, names = TRUE, x = varCorrelation)
+# Report and remove (?) variables
+if(length(correlatedVars)>0){
+  print(paste0("Highly correlated variables: ", paste(correlatedVars, collapse = " ")))
+}
+### ----------------
+
 train.filtered <- train[(...)]
 
 
