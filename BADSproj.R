@@ -87,6 +87,14 @@ Z.outlier <- function(x){
   x[Zscore <(-3)] <- NA
   return(x)}
 
+#-Duplicated rows
+count.duplicates <- function(DF){
+  x <- do.call('paste', c(DF, sep = '\r'))
+  ox <- order(x)
+  rl <- rle(x[ox])
+  cbind(DF[ox[cumsum(rl$lengths)],,drop=FALSE],count = rl$lengths)
+  
+}
 
 # - Aggregate color levels -
 agg.col <- function (df.col) {
@@ -151,7 +159,6 @@ daten$item_price[daten$item_price <= 0] <- NA
 
 
 
-
 # ---- Title ----
 levels(daten$user_title) <- c(levels(factor(daten$user_title)),"Other")
 daten$user_title[daten$user_title != "Mrs" & daten$user_title != "Mr"] <- factor("Other")
@@ -203,12 +210,15 @@ names(daten)[names(daten) == "n"] <- "ct_basket_size"
 names(daten)[names(daten) == "nn"] <- "ct_same_items"
 
 
-
 # ---- Customers past return rates ----
 
-# ----------------------- End: New variables
+rate<-data.frame(daten$user_id)
+sena<-count.duplicates(rate)
 
 
+
+
+# ----------------------- End new variables
 
 
 # ----------------------- Start: Drop non relevant variables
