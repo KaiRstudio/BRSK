@@ -88,13 +88,13 @@ Z.outlier <- function(x){
   return(x)}
 
 #-Duplicated rows
-count.duplicates <- function(DF){
-  x <- do.call('paste', c(DF, sep = '\r'))
-  ox <- order(x)
-  rl <- rle(x[ox])
-  cbind(DF[ox[cumsum(rl$lengths)],,drop=FALSE],count = rl$lengths)
-  
-}
+# count.duplicates <- function(DF){
+#   x <- do.call('paste', c(DF, sep = '\r'))
+#   ox <- order(x)
+#   rl <- rle(x[ox])
+#   cbind(DF[ox[cumsum(rl$lengths)],,drop=FALSE],count = rl$lengths)
+#   
+# }
 
 # - Aggregate color levels -
 agg.col <- function (df.col) {
@@ -200,7 +200,7 @@ daten$age <- Z.outlier(daten$age)
 
 
 # ---- Number of items in a basket ----
-daten <- join(daten, count(daten, order_date, user_id),by = c("order_date", "user_id"))
+daten <- join(daten, dplyr::count(daten, order_date, user_id),by = c("order_date", "user_id"))
 
 
 
@@ -211,10 +211,16 @@ names(daten)[names(daten) == "nn"] <- "ct_same_items"
 
 
 # ---- Customers past return rates ----
-
-rate<-data.frame(daten$user_id)
-sena<-count.duplicates(rate)
-
+numberOfOrdersPerUser<-count(daten, user_id)
+names(numberOfOrdersPerUser)[names(numberOfOrdersPerUser)=="n"]<-"TotalOrder"
+onlyReturn <- daten[daten$return==1,]
+numberOfReturnsPerUser <- count(onlyReturn, user_id)
+names(numberOfReturnsPerUser)[names(numberOfReturnsPerUser)=="n"]<-"TotalReturn"
+returnsAndOrders <- join(numberOfOrdersPerUser, numberOfReturnsPerUser, by = "user_id", type = "left", match = "first")
+returnsAndOrders$TotalReturn[is.na(returnsAndOrders$TotalReturn)]<-0 #replace NA by 0
+returnsAndOrders$customersReturnRate<-returnsAndOrders[,3]/returnsAndOrders[,2]
+daten<-merge(daten, returnsAndOrders[, c("user_id", "customersReturnRate")], by="user_id")
+  
 
 
 
