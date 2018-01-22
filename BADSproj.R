@@ -144,8 +144,8 @@ daten$item_color <- agg.col(daten$item_color)
 
 # ---- Price ----
 daten$item_price[daten$item_price <= 0] <- NA
-# med_item_price <- median(daten$item_price, na.rm=TRUE)
-# daten$item_price[is.na(daten$item_price)] <- med_item_price
+med_item_price <- median(daten$item_price, na.rm=TRUE)
+daten$item_price[is.na(daten$item_price)] <- med_item_price
 
 # - Scale Price -
 #daten$item_price2 <- as.numeric(scale(daten$item_price))
@@ -180,7 +180,6 @@ daten$delivery_time <- Z.outlier(as.numeric(daten$delivery_date - daten$order_da
 daten$regorderdiff <- as.numeric(daten$order_date - daten$user_reg_date) ## makes sense?
 # If necessary replace NAs by median
 #MED_DEL <- round( median (daten$delivery_time, na.rm =TRUE)) # round( mean (daten$delivery_time, na.rm =TRUE)) gives median of 4 and mean of 11 for delivery time
-#daten$delivery_date[is.na(daten$delivery_date)]<- daten$order_date[is.na(daten$delivery_date)] + MED_DEL
 #daten$delivery_time[is.na(daten$delivery_time)] <- MED_DEL
 
 # Scaled date variables
@@ -192,8 +191,8 @@ daten$regorderdiff <- as.numeric(daten$order_date - daten$user_reg_date) ## make
 # ---- Customer age ----
 daten$age <- age(daten$user_dob,daten$order_date)
 daten$age <- Z.outlier(daten$age)
-#med.age <- round(median(daten$age, na.rm = TRUE))
-#daten$age[is.na(daten$age)] <- med.age
+med.age <- median(daten$age, na.rm = TRUE)
+daten$age[is.na(daten$age)] <- med.age
 #daten$age2 <- as.numeric(scale(daten$age))
 
 
@@ -241,12 +240,19 @@ daten <- daten[,!(names(daten) %in% drops)]
 
 
 # ----------------------- Start: Binning and WoE
-
+daten$delivery_time <- dummy
 # ---- Binning ----
-#binning <- woe.binning (df=daten, target.var="return", pred.var=c("delivery_time"), min.perc.class = 0.01)
-#woe.binning.plot(binning)
-#woe.binning.table(binning)
+binning <- woe.binning (df=daten, target.var="return", pred.var=c("delivery_time"), min.perc.class = 0.01)
+woe.binning.plot(binning)
+woe.binning.table(binning)
+#daten <- woe.binning.deploy(daten, binning, add.woe.or.dum.var = "woe")
 
+daten$delivery_time <- ifelse(is.na(daten$delivery_time), "Missing",
+                              ifelse(daten$delivery_time <= 1, "<=1", ">1"))
+daten$delivery_time <- factor(daten$delivery_time)
+
+age.binning <- woe.binning (df=daten, target.var="return", pred.var=c("age"), min.perc.class = 0.01)
+woe.binning.plot(age.binning)
 
 
 # ---- WoE ----
@@ -256,39 +262,34 @@ idx.train <- createDataPartition(y = daten$return, p = 0.75, list = FALSE) # Dra
 test <-  daten[-idx.train, ] # test set
 train <- daten[idx.train, ] # training set
 
-tapply(train$item_id, train$return, summary)
-tapply(train$item_size, train$return, summary)
-tapply(train$item_color, train$return, summary)
-tapply(train$brand_id, train$return, summary)
-tapply(train$item_price, train$return, summary)
-tapply(train$user_id, train$return, summary)
-tapply(train$user_title, train$return, summary)
-tapply(train$user_state, train$return, summary)
-tapply(train$order_month, train$return, summary)
-tapply(train$delivery_time, train$return, summary)
-tapply(train$regorderdiff, train$return, summary)
-tapply(train$age, train$return, summary)
-tapply(train$user_title, train$return, summary)
-tapply(train$ct_basket_size, train$return, summary)
-tapply(train$ct_same_items, train$return, summary)
+#tapply(train$item_id, train$return, summary)
+#tapply(train$item_size, train$return, summary)
+#tapply(train$item_color, train$return, summary)
+#tapply(train$brand_id, train$return, summary)
+#tapply(train$item_price, train$return, summary)
+#tapply(train$user_id, train$return, summary)
+#tapply(train$user_title, train$return, summary)
+#tapply(train$user_state, train$return, summary)
+#tapply(train$order_month, train$return, summary)
+#tapply(train$delivery_time, train$return, summary)
+#tapply(train$regorderdiff, train$return, summary)
+#tapply(train$age, train$return, summary)
+#tapply(train$user_title, train$return, summary)
+#tapply(train$ct_basket_size, train$return, summary)
+#tapply(train$ct_same_items, train$return, summary)
 
 ##if there is the prob of zero in one level for return/non-return, function does not work -> zeroadj
 data <- train[, sapply(train, is.factor)]
-#data <- data[, -1]
 woe.values <- woe(return ~ ., data=train, zeroadj=0.1)
-## weights for each factor
-woe.values$woe
 # note: klaR assumes the first level of target to be the target level (WoE refer to no returns)
-## transformed version (variables have been replaced with woe)
-summary(woe.values$xnew)
-## replacement
-test.woe <- predict(woe.values, newdata=test, replace=TRUE)
-summary(test.woe)
+
 ## check for plausibility by plotting weights against their levels
 # *-1 because woe predicts how probable 0 appears, not how probable 1 is
 barplot(-1*woe.values$woe$user_state)
-
+## replacement
+test.woe <- predict(woe.values, newdata=test, replace=TRUE)
 train.woe <- predict(woe.values, newdata=train, replace=TRUE)
+# Check if data was replaced correctly (because of that -1 shit thing)
 
 # ----------------------- End Binning & WoE
 

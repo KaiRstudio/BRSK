@@ -6,12 +6,26 @@
 source("BADSproj.R")
 # ----------------------- 
 
+if(!require("NeuralNetTools")) install.packages("NeuralNetTools"); library("NeuralNetTools")
+if(!require("caret"))         install.packages("caret");        library("caret")
+if(!require("level.stat"))         install.packages("level.stat");        library("level.stat")
+if(!require("glmnet"))         install.packages("glmnet");        library("glmnet")
+
+if(!require("gstat"))         install.packages("gstat");        library("gstat")
+if(!require("doParallel")) install.packages("doParallel"); library("doParallel")
+if(!require("corrplot"))         install.packages("corrplot");        library("corrplot")
+
+
 
 # ----------------------- Filter
 # ----------------------- # ----------------------- # ----------------------- # ----------------------- # ----------------------- 
+
 # ----------------------- WoE Variables: Information Value (IV)
 
+train.woe$return<-as.factor(ifelse(train.woe$return == 1, "Return", "No.Return"))
 woe.values$IV
+
+# Save those to filter
 filtered <- names(woe.values$IV[woe.values$IV <0.02])
 
 # ----------------------- 
@@ -32,7 +46,7 @@ fisherScore <- function (feature, targetVariable)
 }
 
 # apply to numeric variables:
-fisher_scores <- apply(train[,sapply(train, is.numeric)], 2, fisherScore, train$return)
+fisher_scores <- apply(train.woe[,sapply(train.woe, is.numeric)], 2, fisherScore, train.woe$return)
 fisher_scores 
 # ----------------------- 
 
@@ -40,6 +54,8 @@ fisher_scores
 
 
 # ----------------------- Categorical: Cramer’s V
+cor.mat <- cor(train.woe[, !(names(train.woe) == "return")])
+corrplot(cor.mat)
 
 # function
 cv.test = function(x,y) {
@@ -51,12 +67,7 @@ cv.test = function(x,y) {
 
 # apply to categorical variables
 
-  # I think it makes sense to apply WoE to all categorcial variables
-
-
-
 # remove those variables that are not predictive regarding IV, Fisher and/or Cramer V
-
 # not predictve: Cramers V < 0.01
 # not predictive: fischer_score < 0.015
 # <0.02: not predictive; 0.02-0.1: weak, 0.1-0.3: medium, >0.3 strong IV
@@ -65,43 +76,16 @@ cv.test = function(x,y) {
 
 
 
-
-# ----------------------- Find correlation with caret
-# Multicollinearity
-library(caret)
-numeric_columns = c("price", "tax", "order_date_day", "order_date_month", "delivery_time")
-# these columns also contain N/A values --> the option "pairwise.complete.obs" should be used
-numeric_columns_correlation = cor(training_data[, numeric_columns], use="pairwise.complete.obs")
-numeric_columns_correlation
-# works for non-N/A only (remove N/A rows or fill with mean, median, etc)
-high_cor_columns = findCorrelation(numeric_columns_correlation)
-high_cor_columns
-
-### Add-on: Efficient removal of highly correlated features with carets findCorrelation() ####
-# Identify variables which should be efficiently removed so that no
-# correlation exceeds threshold
-varCorrelation <- cor(train[,sapply(train,is.numeric)]) # Make sure that the target variable is not included
-correlatedVars <- caret::findCorrelation(cutoff = 0.5, names = TRUE, x = varCorrelation)
-# Report and remove (?) variables
-if(length(correlatedVars)>0){
-  print(paste0("Highly correlated variables: ", paste(correlatedVars, collapse = " ")))
-}
-# ----------------------- 
-
-
-
 # ----------------------- Drop filtered columns in train sets
-
-train.filtered <- train[,!(names(train) %in% filtered)]
 filtered
-
+#train.filtered <- train[,!(names(train) %in% filtered)]
 dropswoe <- c("woe.item_color",
            "woe.user_title",
            "woe.user_state",
            "woe.order_month")
 train.woe <- train.woe[,!(names(train.woe) %in% dropswoe)]
-names(train.woe) <- c("item_price", "return", "delivery_time", "regorderdiff", "age", "ct_basket_size",
-"ct_same_items", "item_id", "item_size", "brand_id", "user_id")
+#names(train.woe) <- c("item_price", "return", "delivery_time", "regorderdiff", "age", "ct_basket_size",
+#"ct_same_items", "item_id", "item_size", "brand_id", "user_id")
 
 # ----------------------- # ----------------------- # ----------------------- # ----------------------- # ----------------------- 
 # ----------------------- End Filter
@@ -109,16 +93,22 @@ names(train.woe) <- c("item_price", "return", "delivery_time", "regorderdiff", "
 
 
 
+# Allow parallel computation
+no_of_cores = detectCores()
+cl <- makeCluster( max(1,detectCores()-2))
+registerDoParallel(cl)
+
+
 
 # ----------------------- Build Models
 # ----------------------- # ----------------------- # ----------------------- # ----------------------- # ----------------------- 
 
-if(!require("NeuralNetTools")) install.packages("NeuralNetTools"); library("NeuralNetTools")
-if(!require("caret"))         install.packages("caret");        library("caret")
+
 
 # ----------------------- Random Forest
+gc() # clean cache
 
-k <- 5 # Set number of cross validation
+k <- 2 # Set number of cross validation
 set.seed(123)
 
 # - Set controls for rf
@@ -136,9 +126,15 @@ rf.parms <- expand.grid(mtry = 1:10)
 # Train random forest rf with a 5-fold cross validation 
 # ntree set as default value 500
 rf.caret <- train(return~., data = train.woe,
-                  method = "rf", ntree = 500, tuneGrid = rf.parms, importance = TRUE,
-                  metric = "ROC", trControl = model.control, na.action = na.omit)
+                  method = "rf", 
+                  ntree = 500, 
+#                  tuneGrid = rf.parms, 
+                  importance = TRUE,
+                  metric = "ROC", 
+                  trControl = model.control, 
+                  na.action = na.omit)
 
+stopCluster(cl)
 # ----------------------- End Random Forest
 
 
@@ -165,7 +161,7 @@ xgb.parms <- expand.grid(nrounds = c(20, 40, 60, 80),
 # Train model
 xgb <- train(return_customer~., data = train,  
              method = "xgbTree",
-             tuneGrid = xgb.parms, 
+ #            tuneGrid = xgb.parms, 
              metric = "ROC", trControl = model.control)
 
 # ----------------------- End Gradient Boosting  
@@ -174,6 +170,19 @@ xgb <- train(return_customer~., data = train,
 
 
 # ----------------------- Neural Networks
+nn.train.woe <- train.woe
+nn.test.woe <- test.woe
+
+# Neural networks work better when the data inputs are on the same scale, e.g. standardized
+# Be careful to use the training mean/sd for normalization
+normalizer <- caret::preProcess(train, method = c("center", "scale"))
+
+nn.train.woe <- predict(normalizer, newdata = nn.train.woe)
+nn.test.woe <- predict(normalizer, newdata = nn.test.woe)
+
+nn.train.woe$return <- as.factor(ifelse(nn.train.woe$return == 1, 1, -1))
+nn.test.woe$return <- as.factor(ifelse(nn.test.woe$return == 1, 1, -1))
+
 
 model.control<- trainControl(
   method = "cv", 
@@ -190,17 +199,13 @@ nn.parms <- expand.grid("decay" = 0.001,
 
 #Train neural network nn with 5-fold cv
 set.seed(123)
-nn_caret <- caret::train(BAD~., data = tr,  
+nn_caret <- caret::train(return~., data = nn.train.woe,  
                          method = "nnet", maxit = 100, trace = FALSE, # options for nnet function
                          tuneGrid = nn.parms, # parameters to be tested
                          metric = "ROC", trControl = model.control)
 
 
-# Neural networks work better when the data inputs are on the same scale, e.g. standardized
-# Be careful to use the training mean/sd for normalization
-normalizer <- caret::preProcess(train, method = c("center", "scale"))
-tr <- predict(normalizer, newdata = train)
-ts <- predict(normalizer, newdata = test)
+
 
 nn_raw <- nnet(BAD~., data = train, # the data and formula to be used
                trace = FALSE, maxit = 1000, # general options
@@ -215,12 +220,19 @@ plotnet(nn, max_sp = TRUE)
 # ----------------------- Logistic Regression
 
 # Regularized Logistic Regression
-indep.var <- model.matrix(return~.-1, daten)
-dep.var <- daten$return
+x.tr <- model.matrix(return~.-1, train.woe)
+y.tr <- train.woe$return
 lasso <- glmnet(x = indep.var, y = dep.var, family = "binomial", standardize = TRUE,
                 alpha = 1, nlambda = 100)
-yhat["lasso"] <- as.vector( predict(lasso, newx = x, s = 0.001, type = "response") )
 
+
+
+
+#easy
+lasso <- glmnet(x = x.tr, y = y.tr, family = "binomial", standardize = TRUE,
+                alpha = 1, nlambda = 100)
+
+yhat["lasso"] <- as.vector( predict(lasso, newx = x, s = 0.001, type = "response") )
 # ----------------------- End Logistic Regression
 
 
