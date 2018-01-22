@@ -239,29 +239,32 @@ daten <- daten[,!(names(daten) %in% drops)]
 
 
 
-# ----------------------- Start: Binning and WoE
-daten$delivery_time <- dummy
-# ---- Binning ----
+# ----------------------- Start: Binning
 binning <- woe.binning (df=daten, target.var="return", pred.var=c("delivery_time"), min.perc.class = 0.01)
-woe.binning.plot(binning)
-woe.binning.table(binning)
-#daten <- woe.binning.deploy(daten, binning, add.woe.or.dum.var = "woe")
-
+#woe.binning.plot(binning)
+#daten <- woe.binning.deploy(daten, binning, add.woe.or.dum.var = "woe") better way to apply binning than below?
 daten$delivery_time <- ifelse(is.na(daten$delivery_time), "Missing",
                               ifelse(daten$delivery_time <= 1, "<=1", ">1"))
 daten$delivery_time <- factor(daten$delivery_time)
+# Probably no further binning of numerical variables than delivery_time
+# ----------------------- End: Binning
 
-age.binning <- woe.binning (df=daten, target.var="return", pred.var=c("age"), min.perc.class = 0.01)
-woe.binning.plot(age.binning)
 
 
-# ---- WoE ----
+
+# ----------------------- Start: Split Data
 # to avoid overfitting: split a woe training set from the overall training set
-set.seed(222)
+set.seed(123)
 idx.train <- createDataPartition(y = daten$return, p = 0.75, list = FALSE) # Draw a random, stratified sample including p percent of the data
 test <-  daten[-idx.train, ] # test set
 train <- daten[idx.train, ] # training set
+# ----------------------- End: Split Data
+# ----------> should the data be splitted before? (see row 257)
 
+
+
+
+# ----------------------- Start: WoE
 #tapply(train$item_id, train$return, summary)
 #tapply(train$item_size, train$return, summary)
 #tapply(train$item_color, train$return, summary)
@@ -277,21 +280,18 @@ train <- daten[idx.train, ] # training set
 #tapply(train$user_title, train$return, summary)
 #tapply(train$ct_basket_size, train$return, summary)
 #tapply(train$ct_same_items, train$return, summary)
-
-##if there is the prob of zero in one level for return/non-return, function does not work -> zeroadj
-data <- train[, sapply(train, is.factor)]
 woe.values <- woe(return ~ ., data=train, zeroadj=0.1)
-# note: klaR assumes the first level of target to be the target level (WoE refer to no returns)
+# - note: klaR assumes the first level of target to be the target level (WoE refer to no returns)
 
-## check for plausibility by plotting weights against their levels
+## - check for plausibility by plotting weights against their levels
 # *-1 because woe predicts how probable 0 appears, not how probable 1 is
 barplot(-1*woe.values$woe$user_state)
 ## replacement
 test.woe <- predict(woe.values, newdata=test, replace=TRUE)
 train.woe <- predict(woe.values, newdata=train, replace=TRUE)
-# Check if data was replaced correctly (because of that -1 shit thing)
+# - Check if data was replaced correctly (because of that -1 shit thing)
 
-# ----------------------- End Binning & WoE
+# ----------------------- End: WoE
 
 
 
