@@ -295,7 +295,7 @@ train.woe <- predict(woe.values, newdata=train, replace=TRUE)
 
 
 
-missmap(daten, main = "Missing values vs observed") # to give a plot of the missing values per variable
+#missmap(daten, main = "Missing values vs observed") # to give a plot of the missing values per variable
 
 # ---- IDEAS & OPEN QUESTIONS ----
 

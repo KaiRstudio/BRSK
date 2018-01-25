@@ -14,6 +14,8 @@ if(!require("NeuralNetTools")) install.packages("NeuralNetTools"); library("Neur
 if(!require("corrplot"))         install.packages("corrplot");        library("corrplot")
 if(!require("glmnet"))         install.packages("glmnet");        library("glmnet")
 if(!require("caret"))         install.packages("caret");        library("caret")
+if(!require("mlr"))         install.packages("mlr");        library("mlr")
+
 # maybe not needed packages
 if(!require("level.stat"))         install.packages("level.stat");        library("level.stat")
 if(!require("gstat"))         install.packages("gstat");        library("gstat")
@@ -96,184 +98,55 @@ corrplot(cor.mat, method = "number")
 
 #Same for test
 test.woe <- test.woe[,!(names(test.woe) %in% dropswoe)]
-#test.woe <- test.woe[,!(names(test.woe) %in% c("woe.brand_id", "customersReturnRate"))]
+test.woe <- test.woe[,!(names(test.woe) %in% c("woe.brand_id", "customersReturnRate"))]
 # ----------------------- # ----------------------- # ----------------------- # ----------------------- # ----------------------- 
 # ----------------------- End Filter
 
 
 
 
-
-# ----------------------- Build Models
-# ----------------------- # ----------------------- # ----------------------- # ----------------------- # ----------------------- 
-
-# - Adapt return factors for prediction
-#train.woe$return<-as.factor(ifelse(train.woe$return == 1, "Return", "No.Return"))
-
-# ----------------------- Start: Random Forest
-gc() # clean cache
-yhat <- list()
-
-# ---------- simple model
-set.seed(123)
-rf <- train (return~., data = train.woe,
-             method = "rf",
-             ntree = 500,
-             na.action = na.omit)
-
-
-# ----------- complex model
-k <- 5 # Set number of cross validation
-set.seed(123)
-# - Set controls for rf
-model.control <- trainControl(
-  method = "cv", 
-  number = k, 
-  classProbs = TRUE, 
-  summaryFunction = twoClassSummary, 
-  allowParallel = TRUE 
-)
-#set search grid
-rf.parms <- expand.grid(mtry = 1:10)
-# Train random forest rf with a 5-fold cross validation 
-# ntree set as default value 500
-rf.caret <- train(return~., data = train.woe,
-                  method = "rf", 
-                  ntree = 500, 
-                  tuneGrid = rf.parms, 
-                  importance = TRUE,
-                  metric = "ROC", 
-                  trControl = model.control, 
-                  na.action = na.omit)
-
-
-yhat[["rf"]] <- predict(rf, test.woe, type="prob")[,2]
-
-# ----------------------- End: Random Forest
-
-
-
-# ----------------------- Start: Logistic Regression
-
-x.tr <- model.matrix(return~.-1, train.woe)
-y.tr <- train.woe$return
-lasso <- glmnet(x = x.tr, y = y.tr, family = "binomial", standardize = TRUE,
-                alpha = 1, nlambda = 100)
-newx.tr <- model.matrix(return~.-1, test.woe)
-yhat[["lasso"]] <- as.vector( predict(lasso, newx = newx.tr, s = 0.001, type = "response") )
-# ----------------------- End: Logistic Regression
-
-
-
-
-# ----------------------- Start: Neural Networks
-# - Adjust return values for Neural Network
-nn.train.woe$return <- as.factor(ifelse(nn.train.woe$return == 1, 1, -1))
-nn.test.woe$return <- as.factor(ifelse(nn.test.woe$return == 1, 1, -1))
+# ----------------------- Start: Prep Input for NN
 
 # Neural networks work better when the data inputs are on the same scale, e.g. standardized
 # Be careful to use the training mean/sd for normalization
 normalizer <- caret::preProcess(nn.train.woe[,names(nn.train.woe) %in% c("item_price","regorderdiff","age","ct_basket_size","ct_same_items")],
                                 method = c("center", "scale"))
-
 nn.train.woe <- predict(normalizer, newdata = train.woe)
 nn.test.woe <- predict(normalizer, newdata = test.woe)
 
+# - Adjust return values for Neural Network
+nn.train.woe$return <- as.factor(ifelse(nn.train.woe$return == 1, 1, -1))
+nn.test.woe$return <- as.factor(ifelse(nn.test.woe$return == 1, 1, -1))
 
-model.control<- trainControl(
-  method = "cv", 
-  number = 5, 
-  repeats = 3,
-  classProbs = TRUE,
-  summaryFunction = twoClassSummary,
-  allowParallel = TRUE, 
-  returnData = FALSE )
-
-# Define a search grid of values to test
-nn.parms <- expand.grid("decay" = 0.001, 
-                        "size" = seq(3, 15, 3))
-
-#Train neural network nn with 5-fold cv
-set.seed(123)
-nn_caret <- caret::train(return~., data = nn.train.woe,  
-                         method = "nnet", maxit = 100, trace = FALSE, # options for nnet function
-                         tuneGrid = nn.parms, # parameters to be tested
-                         metric = "ROC", trControl = model.control)
+# ----------------------- End: Prep Input for NN
 
 
 
 
-nn_raw <- nnet(BAD~., data = train, # the data and formula to be used
-               trace = FALSE, maxit = 1000, # general options
-               size = 3, # the number of nodes in the model
-               decay = 0.001) # regularization parameter similar to lambda in ridge regression
-
-plotnet(nn, max_sp = TRUE)
-# ----------------------- End: Neural Network
-
-
-
-# ----------------------- Start: (Extreme) Gradient Boosting
-
-model.control<- trainControl(
-  method = "cv", # 'cv' for cross validation
-  number = 5, # number of folds in cross validation
-  classProbs = TRUE,
-  summaryFunction = twoClassSummary,
-  allowParallel = TRUE, # Enable parallelization if available
-  returnData = TRUE)
-
-#set search grid
-xgb.parms <- expand.grid(nrounds = c(20, 40, 60, 80), 
-                         max_depth = c(2, 4), 
-                         eta = c(0.01, 0.05, 0.1, 0.15), 
-                         gamma = 0,
-                         colsample_bytree = c(0.8, 1),
-                         min_child_weight = 1,
-                         subsample = 0.8)
-# Train model
-xgb <- train(return_customer~., data = train,  
-             method = "xgbTree",
- #            tuneGrid = xgb.parms, 
-             metric = "ROC", trControl = model.control)
-
-# ----------------------- End: Gradient Boosting  
-
-
-
-# First Accuracy check
-# AUC & ROC curve
-yhat.df <- data.frame(yhat) 
-h <- HMeasure( as.numeric(test.woe$return)-1, yhat.df, severity.ratio = 0.1) 
-plotROC(h, which = 1) 
-auc_testset <- h$metrics['AUC']
-auc_testset
-
-
-
-
-
-
-
-
-
-# ----------------------- Wrapper Approach
+# ----------------------- Original models and Wrapper 
 # ----------------------- # ----------------------- # ----------------------- # ----------------------- # ----------------------- 
 
 library(mlr)
-
+gc()
 # depending on the stage of preprocessing: delete variables that do not contribute to a logical understanding
 # test.woe <- test.woe[, -c(1, 2, 3, 4, 6, 7, 8)]
 
-
 # define task
-task <- makeClassifTask(data=train.filtered, target="return", positive="1")
+task <- makeClassifTask(data=train.woe, target="return", positive="1")
+nn.task <- makeClassifTask(data=nn.train.woe, target="return", positive="1")
+
+# Start parallel
+library("parallelMap")
+parallelStartSocket(3)
 
 # define learning algorithms
 rf <- makeLearner("classif.randomForest", predict.type="prob", par.vals=list("replace"=TRUE, "importance"=FALSE))
-nn <- makeLearner("classif.neuralnet", predict.type="prob")
+nn <- makeLearner("classif.neuralnet", predict.type="prob") #par.vals = list("trace" = FALSE, "maxit" = 400) ?
 lr <- makeLearner("classif.penalized.lasso", predict.type="prob")
-xgb <- makeLearner("classif.xgboost", predict.type="prob")
+xgb <- makeLearner("classif.xgboost", predict.type="prob") #par.vals = list("verbose" = 1) hinzufügen?
+
+# Stop parallel
+parallelStop()
 
 # define selection procedure (here: stepwise forward selection)
 featureSearchCtrl <- makeFeatSelControlSequential(method="sfs", alpha = 0.01) 
@@ -281,11 +154,15 @@ featureSearchCtrl <- makeFeatSelControlSequential(method="sfs", alpha = 0.01)
 # define resampling procedure (here: 5-fold cross validation)
 rdesc <- makeResampleDesc(method="CV", iters=5, stratify=TRUE)
 
+
+parallelStartSocket(3, level = "mlr.selectFeatures")
 # feature selection for all models 
 featureSelectionRF <- selectFeatures(rf, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
-featureSelectionNN <- selectFeatures(nn, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
+featureSelectionNN <- selectFeatures(nn, task=nn.task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
 featureSelectionLR <- selectFeatures(lr, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
 featureSelectionXGB <- selectFeatures(xgb, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
+
+parallelStop()
 
 # Number of variables in total
 ncol(task$env$train)
@@ -299,3 +176,5 @@ featureSelectionXGB
 # remove irrelevant variables from dataset for each model respectively
 
 
+featureSelectionRF$y
+analyzeFeatSelResult(featureSelectionRF)
