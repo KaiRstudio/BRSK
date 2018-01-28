@@ -99,6 +99,10 @@ corrplot(cor.mat, method = "number")
 #Same for test
 test.woe <- test.woe[,!(names(test.woe) %in% dropswoe)]
 test.woe <- test.woe[,!(names(test.woe) %in% c("customersReturnRate"))]
+
+# And nn
+nn.test.woe <- nn.test.woe[,names(nn.test.woe) %in% names(test.woe)]
+nn.train.woe <- nn.train.woe[,names(nn.train.woe) %in% names(train.woe)]
 # ----------------------- # ----------------------- # ----------------------- # ----------------------- # ----------------------- 
 # ----------------------- End Filter
 
@@ -121,7 +125,8 @@ parallelStartSocket(3)
 
 # - Define learning algorithms -
 rf <- makeLearner("classif.randomForest", predict.type="prob", par.vals=list("replace"=TRUE, "importance"=FALSE))
-nn <- makeLearner("classif.neuralnet", predict.type="prob") #par.vals = list("trace" = FALSE, "maxit" = 400) ?
+nn <- makeLearner("classif.neuralnet", predict.type="prob") 
+                  #par.vals = list("trace" = FALSE, "maxit" = 400) ?
 lr <- makeLearner("classif.penalized.lasso", predict.type="prob")
 xgb <- makeLearner("classif.xgboost", predict.type="prob") #par.vals = list("verbose" = 1) hinzufügen?
 
@@ -146,9 +151,9 @@ rdesc <- makeResampleDesc(method="CV", iters=5, stratify=TRUE)
 ncol(task$env$train)
 
 # - Variables selected by different models using treshold alpha -
-featureSelectionRF 
+featureSelectionRF # user_id, item_id, delivery_time
 featureSelectionNN 
-featureSelectionLR 
+featureSelectionLR # usre_id, item_id
 featureSelectionXGB
 
 # remove irrelevant variables from dataset for each model respectively
@@ -157,5 +162,9 @@ featureSelectionXGB
 featureSelectionRF$y
 analyzeFeatSelResult(featureSelectionRF)
 
-train.woe <- train.woe[,(names(train.woe) %in% c("woe.user_id", "woe.item_id", "woe.delivery_time"))]
-test.woe <- test.woe[,(names(test.woe) %in% c("woe.user_id", "woe.item_id", "woe.delivery_time"))]
+rf.train.woe <- train.woe[,(names(train.woe) %in% c("return","woe.user_id", "woe.item_id", "woe.delivery_time"))]
+rf.test.woe <- test.woe[,(names(test.woe) %in% c("return","woe.user_id", "woe.item_id", "woe.delivery_time"))]
+
+lr.train.woe <- train.woe[,names(train.woe) %in% c("return","woe.user_ud", "woe.item_id")]
+lr.test.woe <- test.woe[,names(test.woe) %in% c("return","woe.user_id", "woe.item_id")]
+

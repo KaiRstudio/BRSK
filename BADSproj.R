@@ -193,17 +193,18 @@ daten$age[is.na(daten$age)] <- med.age
 
 
 # ---- Number of items in a basket ----
-daten <- as.numeric(join(daten, dplyr::count(daten, order_date, user_id),
-                         by = c("order_date", "user_id")))
+daten <- join(daten, dplyr::count(daten, order_date, user_id),
+                         by = c("order_date", "user_id"))
 
 
 
 # ---- The number of same item user bought within the same basket ----
-daten <- as.numeric(join(daten, count(daten, order_date, user_id, item_id),
-                         by = c("order_date", "user_id","item_id")))
+daten <- join(daten, count(daten, order_date, user_id, item_id),
+                         by = c("order_date", "user_id","item_id"))
 names(daten)[names(daten) == "n"] <- "ct_basket_size"
 names(daten)[names(daten) == "nn"] <- "ct_same_items"
-
+daten$ct_basket_size <- as.numeric(daten$ct_basket_size)
+daten$ct_same_items <- as.numeric(daten$ct_same_items)
 
 # ---- Customers past return rates ----
 numberOfOrdersPerUser<-count(daten, user_id)
@@ -273,13 +274,13 @@ train.split <- train[woe.idx.train,] # Set for WoE calculation
 # ----------------------- Start: WoE
 # Probably it makes sense to apply WoE only to variables with many factors
 #tapply(train$item_id, train$return, summary)
-tapply(train$item_size, train$return, summary)
-tapply(train$item_color, train$return, summary)
+#tapply(train$item_size, train$return, summary)
+#tapply(train$item_color, train$return, summary)
 #tapply(train$brand_id, train$return, summary)
 #tapply(train$item_price, train$return, summary)
 #tapply(train$user_id, train$return, summary)
-tapply(train$user_title, train$return, summary)
-tapply(train$user_state, train$return, summary)
+#tapply(train$user_title, train$return, summary)
+#tapply(train$user_state, train$return, summary)
 #tapply(train$order_month, train$return, summary)
 #tapply(train$delivery_time, train$return, summary)
 #tapply(train$regorderdiff, train$return, summary)
@@ -292,7 +293,7 @@ woe.values <- woe(return ~ ., data=train.split, zeroadj=0.1)
 
 ## - check for plausibility by plotting weights against their levels
 # *-1 because woe predicts how probable 0 appears, not how probable 1 is
-barplot(-1*woe.values$woe$user_state)
+#barplot(-1*woe.values$woe$user_state)
 ## replacement
 test.woe <- predict(woe.values, newdata=test, replace=TRUE)
 train.woe <- predict(woe.values, newdata=train, replace=TRUE)
@@ -304,8 +305,6 @@ train.woe <- predict(woe.values, newdata=train, replace=TRUE)
 
 
 # ----------------------- Start: Prep Input for NN
-
-# normalized nn are better
 # Be careful to use the training mean/sd for normalization
 normalizer <- caret::preProcess(train.woe[,names(train.woe) %in% c("item_price","regorderdiff","age","ct_basket_size","ct_same_items")],
                                 method = c("center", "scale"))

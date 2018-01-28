@@ -18,7 +18,7 @@ if(!require("NeuralNetTools")) install.packages("NeuralNetTools"); library("Neur
 if(!require("caret"))         install.packages("caret");        library("caret")
 if(!require("mlr"))         install.packages("mlr");        library("mlr")
 
-
+if(!require("nnet")) install.packages("nnet"); library("nnet")
 
 
 # ----------------------- Structure to save results/tune control
@@ -29,18 +29,23 @@ auc <- list()
 tuneControl <- makeTuneControlGrid(resolution = 3, tune.threshold = FALSE)
 
 # ----------------------- 
+featureSearchCtrl <- makeFeatSelControlSequential(method="sfs", alpha = 0.01) 
 
-
+# - Define resampling procedure (here: 5-fold cross validation) -
+rdesc <- makeResampleDesc(method="CV", iters=5, stratify=TRUE)
+task <- makeClassifTask(data=train.woe, target="return", positive="1")
 
 
 # ----------------------- Start Tuning
 # ----------------------- # ----------------------- # ----------------------- # ----------------------- 
 
 # ----------------------- Random Forest
+rf.task <- makeClassifTask(data=rf.train.woe, target="return", positive="1")
 
 rf.parms <- makeParamSet(
   # The recommendation for mtry by Breiman is squareroot number of columns
-  makeIntegerParam("mtry", lower = sqrt(ncol(train.woe))/2, upper = sqrt(ncol(train.woe))*2), # Number of features selected at each node, smaller -> faster
+  makeIntegerParam("mtry", lower = round(sqrt(ncol(rf.train.woe))/2),
+                   upper = round(sqrt(ncol(rf.train.woe))*2)), # Number of features selected at each node, smaller -> faster
   makeIntegerParam("ntree", lower = 100, upper = 1000) # Number of tree, smaller -> faster
 ) 
 
@@ -49,7 +54,7 @@ rf.parms <- makeParamSet(
 # number of bagging iterations 5, 10, 15, 20, 25
 
 parallelStartSocket(3, level = "mlr.tuneParams")
-rf.tuning <- tuneParams(rf, task = task, resampling = rdesc,
+rf.tuning <- tuneParams(rf, task = rf.task, resampling = rdesc,
                         par.set = rf.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
 # Start resampling
@@ -57,10 +62,10 @@ parallelStop()
 rf.tuning <- setHyperPars(rf, par.vals = rf.tuning$x) # necessary or how is tuned data extracted?
 
 # Train the model on the full training data (not only a CV-fold)
-modelLib[["rf"]] <- mlr::train(rf.tuning, task = task)
+modelLib[["rf"]] <- mlr::train(rf.tuning, task = rf.task)
 
 # Make prediction on test data
-yhat[["rf"]] <- predict(modelLib[["rf"]], newdata = test.woe)
+yhat[["rf"]] <- predict(modelLib[["rf"]], newdata = rf.test.woe)
 
 
 # Calculate AUC performance on test set 
@@ -73,6 +78,29 @@ auc
 
 # ----------------------- Start: Logistic Regression
 
+lr.task <- makeClassifTask(data=lr.train.woe, target="return", positive="1")
+
+lr.parms <- makeParamSet(
+  makeIntegerParam("lambda1", lower = 0, upper =200) 
+) 
+
+parallelStartSocket(3, level = "mlr.tuneParams")
+lr.tuning <- tuneParams(lr, task = lr.task, resampling = rdesc,
+                        par.set = lr.parms, control = tuneControl, measures = mlr::auc)
+parallelStop()
+
+lr.tuning <- setHyperPars(lr, par.vals = lr.tuning$x) # necessary or how is tuned data extracted?
+
+# Train the model on the full training data (not only a CV-fold)
+modelLib[["lr"]] <- mlr::train(rf.tuning, task = lr.task)
+
+# Make prediction on test data
+yhat[["lr"]] <- predict(modelLib[["lr"]], newdata = lr.test.woe)
+
+
+# Calculate AUC performance on test set 
+auc[["lr"]] <- mlr::performance(yhat[["lr"]], measures = mlr::auc)
+auc
 
 # ----------------------- End: Logistic Regression
 
@@ -81,13 +109,13 @@ auc
 
 # ----------------------- Start: Extreme Gradient Boosting
 xgb.parms <- makeParamSet(
-  makeDiscreteParam("nrounds", values = c(100, 200, 400, 500)), 
-  makeDiscreteParam("max_depth", values = c(3, 5, 7, 9, 12, 15, 17, 25)), 
-  makeDiscreteParam("eta", values = c(0.01, 0.015, 0.025, 0.05, 0.1, 0.15)), 
-  makeDiscreteParam("gamma", values = c(0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 1)),
-  makeDiscreteParam("colsample_bytree", values = c(0.6, 0.7, 0.8, 0.9, 1)),
-  makeDiscreteParam("min_child_weight", values = c(1, 3, 5, 7)),
-  makeDiscreteParam("subsample", values = c(0.6, 0.7, 0.8, 0.9, 1))
+  makeIntegerParam("nrounds", lower= 100,upper = 200), 
+  makeIntegerParam("max_depth", lower= 3, upper= 10), 
+  makeNumericParam("eta", lower = 0.01, upper = 0.5), 
+  makeNumericParam("gamma", lower =0, upper= 0.3),
+  makeDiscreteParam("colsample_bytree", values = c(0.6, 0.7, 0.8)),
+  makeNumericParam("min_child_weight",lower=0.8,upper=2),
+  makeNumericParam("subsample", lower= 0.8, upper=1)
   
 )
 # choose lambda and alpha randomly - how?
@@ -128,10 +156,13 @@ auc
 
 # Neural networks work better when the data inputs are on the same scale, e.g. standardized
 nn.parms <- makeParamSet(
-  makeNumericParam("decay", lower = -4, upper = 0, trafo = function(x) 10^x), #decay from 0.0001 to 1
-  makeDiscreteParam("size", values = c(1,2,4,8,16))) # number of neurons in the hidden layer  
+  makeNumericParam("decay", lower = -4, upper = 0, trafo = function(x) 10^x), 
+  makeDiscreteParam("size", values = c(1,2,4,8,16)),
+  makeIntegerParam("maxit", values = c(400,500,750))) 
+# number of neurons in the hidden layer  
+#decay from 0.0001 to 1
 
-parallelStartSocket(3, level = "mlr.tuneParams")
+parallelStartSocket(3)
 nn.tuning <- tuneParams(nn, task = nn.task, resampling = rdesc,
                         par.set = nn.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
