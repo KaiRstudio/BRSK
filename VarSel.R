@@ -15,11 +15,11 @@ if(!require("corrplot"))         install.packages("corrplot");        library("c
 if(!require("glmnet"))         install.packages("glmnet");        library("glmnet")
 if(!require("caret"))         install.packages("caret");        library("caret")
 if(!require("mlr"))         install.packages("mlr");        library("mlr")
+if(!require("parallelMap"))         install.packages("parallelMap");        library("parallelMap")
+
 
 # maybe not needed packages
-if(!require("level.stat"))         install.packages("level.stat");        library("level.stat")
-if(!require("gstat"))         install.packages("gstat");        library("gstat")
-if(!require("doParallel")) install.packages("doParallel"); library("doParallel")
+
 # ----------------------- 
 
 
@@ -86,39 +86,22 @@ corrplot(cor.mat)
 filtered
 #train.filtered <- train[,!(names(train) %in% filtered)]
 dropswoe <- c("woe.item_color",
-           "woe.user_title",
-           "woe.user_state",
-           "woe.order_month")
+              "woe.user_title",
+              "woe.user_state",
+              "woe.order_month")
 train.woe <- train.woe[,!(names(train.woe) %in% dropswoe)]
 
 ### -----------> Drop (User_ID or Return_rate) and brand_id ?
-train.woe <- train.woe[,!(names(train.woe) %in% c("woe.brand_id", "customersReturnRate"))]
+train.woe <- train.woe[,!(names(train.woe) %in% c("customersReturnRate"))]
 cor.mat <- cor(train.woe[, !(names(train.woe) == "return")])
 corrplot(cor.mat, method = "number")
 
 #Same for test
 test.woe <- test.woe[,!(names(test.woe) %in% dropswoe)]
-test.woe <- test.woe[,!(names(test.woe) %in% c("woe.brand_id", "customersReturnRate"))]
+test.woe <- test.woe[,!(names(test.woe) %in% c("customersReturnRate"))]
 # ----------------------- # ----------------------- # ----------------------- # ----------------------- # ----------------------- 
 # ----------------------- End Filter
 
-
-
-
-# ----------------------- Start: Prep Input for NN
-
-# Neural networks work better when the data inputs are on the same scale, e.g. standardized
-# Be careful to use the training mean/sd for normalization
-normalizer <- caret::preProcess(nn.train.woe[,names(nn.train.woe) %in% c("item_price","regorderdiff","age","ct_basket_size","ct_same_items")],
-                                method = c("center", "scale"))
-nn.train.woe <- predict(normalizer, newdata = train.woe)
-nn.test.woe <- predict(normalizer, newdata = test.woe)
-
-# - Adjust return values for Neural Network
-nn.train.woe$return <- as.factor(ifelse(nn.train.woe$return == 1, 1, -1))
-nn.test.woe$return <- as.factor(ifelse(nn.test.woe$return == 1, 1, -1))
-
-# ----------------------- End: Prep Input for NN
 
 
 
@@ -126,48 +109,43 @@ nn.test.woe$return <- as.factor(ifelse(nn.test.woe$return == 1, 1, -1))
 # ----------------------- Original models and Wrapper 
 # ----------------------- # ----------------------- # ----------------------- # ----------------------- # ----------------------- 
 
-library(mlr)
 gc()
-# depending on the stage of preprocessing: delete variables that do not contribute to a logical understanding
-# test.woe <- test.woe[, -c(1, 2, 3, 4, 6, 7, 8)]
 
-# define task
+# - Define tasks -
 task <- makeClassifTask(data=train.woe, target="return", positive="1")
 nn.task <- makeClassifTask(data=nn.train.woe, target="return", positive="1")
 
-# Start parallel
+# - Start parallel -
 library("parallelMap")
 parallelStartSocket(3)
 
-# define learning algorithms
+# - Define learning algorithms -
 rf <- makeLearner("classif.randomForest", predict.type="prob", par.vals=list("replace"=TRUE, "importance"=FALSE))
 nn <- makeLearner("classif.neuralnet", predict.type="prob") #par.vals = list("trace" = FALSE, "maxit" = 400) ?
 lr <- makeLearner("classif.penalized.lasso", predict.type="prob")
 xgb <- makeLearner("classif.xgboost", predict.type="prob") #par.vals = list("verbose" = 1) hinzufügen?
 
-# Stop parallel
+# - Stop parallel -
 parallelStop()
 
-# define selection procedure (here: stepwise forward selection)
+# - Define selection procedure (here: stepwise forward selection) -
 featureSearchCtrl <- makeFeatSelControlSequential(method="sfs", alpha = 0.01) 
 
-# define resampling procedure (here: 5-fold cross validation)
+# - Define resampling procedure (here: 5-fold cross validation) -
 rdesc <- makeResampleDesc(method="CV", iters=5, stratify=TRUE)
 
+# - Parallel feature selection for all models -
+#parallelStartSocket(3, level = "mlr.selectFeatures")
+#featureSelectionRF <- selectFeatures(rf, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
+#featureSelectionNN <- selectFeatures(nn, task=nn.task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
+#featureSelectionLR <- selectFeatures(lr, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
+#featureSelectionXGB <- selectFeatures(xgb, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
+#parallelStop()
 
-parallelStartSocket(3, level = "mlr.selectFeatures")
-# feature selection for all models 
-featureSelectionRF <- selectFeatures(rf, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
-featureSelectionNN <- selectFeatures(nn, task=nn.task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
-featureSelectionLR <- selectFeatures(lr, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
-featureSelectionXGB <- selectFeatures(xgb, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
-
-parallelStop()
-
-# Number of variables in total
+# - Number of variables in total - 
 ncol(task$env$train)
 
-# Variables selected by different models using treshold alpha
+# - Variables selected by different models using treshold alpha -
 featureSelectionRF 
 featureSelectionNN 
 featureSelectionLR 
@@ -178,3 +156,6 @@ featureSelectionXGB
 
 featureSelectionRF$y
 analyzeFeatSelResult(featureSelectionRF)
+
+train.woe <- train.woe[,(names(train.woe) %in% c("woe.user_id", "woe.item_id", "woe.delivery_time"))]
+test.woe <- test.woe[,(names(test.woe) %in% c("woe.user_id", "woe.item_id", "woe.delivery_time"))]
