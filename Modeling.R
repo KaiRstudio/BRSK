@@ -40,6 +40,9 @@ task <- makeClassifTask(data=train.woe, target="return", positive="1")
 # ----------------------- # ----------------------- # ----------------------- # ----------------------- 
 
 # ----------------------- Random Forest
+
+set.seed(123)
+
 rf.task <- makeClassifTask(data=rf.train.woe, target="return", positive="1")
 
 rf.parms <- makeParamSet(
@@ -58,7 +61,7 @@ rf.tuning <- tuneParams(rf, task = rf.task, resampling = rdesc,
                         par.set = rf.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
 # Start resampling
-
+rf.tuning$x
 rf.tuning <- setHyperPars(rf, par.vals = rf.tuning$x) # necessary or how is tuned data extracted?
 
 # Train the model on the full training data (not only a CV-fold)
@@ -78,6 +81,8 @@ auc
 
 # ----------------------- Start: Logistic Regression
 
+set.seed(123)
+
 lr.task <- makeClassifTask(data=lr.train.woe, target="return", positive="1")
 
 lr.parms <- makeParamSet(
@@ -85,17 +90,17 @@ lr.parms <- makeParamSet(
 ) 
 
 parallelStartSocket(3, level = "mlr.tuneParams")
-lr.tuning <- tuneParams(lr, task = lr.task, resampling = rdesc,
+lr.tuning <- tuneParams(lr, task = task, resampling = rdesc,
                         par.set = lr.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
-
+lr.tuning$x
 lr.tuning <- setHyperPars(lr, par.vals = lr.tuning$x) # necessary or how is tuned data extracted?
 
 # Train the model on the full training data (not only a CV-fold)
-modelLib[["lr"]] <- mlr::train(rf.tuning, task = lr.task)
+modelLib[["lr"]] <- mlr::train(rf.tuning, task = task)
 
 # Make prediction on test data
-yhat[["lr"]] <- predict(modelLib[["lr"]], newdata = lr.test.woe)
+yhat[["lr"]] <- predict(modelLib[["lr"]], newdata = test.woe)
 
 
 # Calculate AUC performance on test set 
@@ -108,6 +113,9 @@ auc
 
 
 # ----------------------- Start: Extreme Gradient Boosting
+
+set.seed(123)
+
 xgb.parms <- makeParamSet(
   makeIntegerParam("nrounds", lower= 100,upper = 200), 
   makeIntegerParam("max_depth", lower= 3, upper= 10), 
@@ -154,11 +162,14 @@ auc
 
 # ----------------------- Start: Neural Networks
 
+set.seed(123)
+
+nn.task <- makeClassifTask(data=nn.train.woe, target="return", positive="1")
+
 # Neural networks work better when the data inputs are on the same scale, e.g. standardized
 nn.parms <- makeParamSet(
   makeNumericParam("decay", lower = -4, upper = 0, trafo = function(x) 10^x), 
-  makeDiscreteParam("size", values = c(1,2,4,8,16)),
-  makeIntegerParam("maxit", values = c(400,500,750))) 
+  makeDiscreteParam("size", values = c(1,2,4,8,16))) 
 # number of neurons in the hidden layer  
 #decay from 0.0001 to 1
 

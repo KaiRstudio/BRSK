@@ -114,7 +114,6 @@ nn.train.woe <- nn.train.woe[,names(nn.train.woe) %in% names(train.woe)]
 # ----------------------- # ----------------------- # ----------------------- # ----------------------- # ----------------------- 
 
 gc()
-
 # - Define tasks -
 task <- makeClassifTask(data=train.woe, target="return", positive="1")
 nn.task <- makeClassifTask(data=nn.train.woe, target="return", positive="1")
@@ -123,9 +122,10 @@ nn.task <- makeClassifTask(data=nn.train.woe, target="return", positive="1")
 library("parallelMap")
 parallelStartSocket(3)
 
+set.seed(123)
 # - Define learning algorithms -
 rf <- makeLearner("classif.randomForest", predict.type="prob", par.vals=list("replace"=TRUE, "importance"=FALSE))
-nn <- makeLearner("classif.neuralnet", predict.type="prob") 
+nn <- makeLearner("classif.nnet", predict.type="prob") 
                   #par.vals = list("trace" = FALSE, "maxit" = 400) ?
 lr <- makeLearner("classif.penalized.lasso", predict.type="prob")
 xgb <- makeLearner("classif.xgboost", predict.type="prob") #par.vals = list("verbose" = 1) hinzufügen?
@@ -138,6 +138,8 @@ featureSearchCtrl <- makeFeatSelControlSequential(method="sfs", alpha = 0.01)
 
 # - Define resampling procedure (here: 5-fold cross validation) -
 rdesc <- makeResampleDesc(method="CV", iters=5, stratify=TRUE)
+
+set.seed(123)
 
 # - Parallel feature selection for all models -
 #parallelStartSocket(3, level = "mlr.selectFeatures")
@@ -152,7 +154,7 @@ ncol(task$env$train)
 
 # - Variables selected by different models using treshold alpha -
 featureSelectionRF # user_id, item_id, delivery_time
-featureSelectionNN 
+featureSelectionNN # user_id, item_id, delivery_time
 featureSelectionLR # usre_id, item_id
 featureSelectionXGB
 
@@ -165,6 +167,8 @@ analyzeFeatSelResult(featureSelectionRF)
 rf.train.woe <- train.woe[,(names(train.woe) %in% c("return","woe.user_id", "woe.item_id", "woe.delivery_time"))]
 rf.test.woe <- test.woe[,(names(test.woe) %in% c("return","woe.user_id", "woe.item_id", "woe.delivery_time"))]
 
-lr.train.woe <- train.woe[,names(train.woe) %in% c("return","woe.user_ud", "woe.item_id")]
+lr.train.woe <- train.woe[,names(train.woe) %in% c("return","woe.user_id", "woe.item_id")]
 lr.test.woe <- test.woe[,names(test.woe) %in% c("return","woe.user_id", "woe.item_id")]
 
+nn.train.woe <- nn.train.woe[, names(nn.train.woe) %in% c("return","woe.user_id", "woe.item_id")]
+nn.test.woe <- nn.test.woe[, names(nn.train.woe) %in% c("return","woe.user_id", "woe.item_id")]
