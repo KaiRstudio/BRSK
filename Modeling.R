@@ -14,11 +14,11 @@ source("VarSel.R")
 
 
 # ----------------------- Packages
-if(!require("NeuralNetTools")) install.packages("NeuralNetTools"); library("NeuralNetTools")
-if(!require("caret"))         install.packages("caret");        library("caret")
-if(!require("mlr"))         install.packages("mlr");        library("mlr")
+if(!require("NeuralNetTools"))  install.packages("NeuralNetTools"); library("NeuralNetTools")
+if(!require("caret"))           install.packages("caret");          library("caret")
+if(!require("mlr"))             install.packages("mlr");            library("mlr")
 
-if(!require("nnet")) install.packages("nnet"); library("nnet")
+if(!require("nnet"))            install.packages("nnet");           library("nnet")
 
 
 # ----------------------- Structure to save results/tune control
