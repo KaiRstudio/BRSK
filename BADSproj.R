@@ -206,18 +206,6 @@ names(daten)[names(daten) == "nn"] <- "ct_same_items"
 daten$ct_basket_size <- as.numeric(daten$ct_basket_size)
 daten$ct_same_items <- as.numeric(daten$ct_same_items)
 
-# ---- Customers past return rates ----
-numberOfOrdersPerUser<-count(daten, user_id)
-names(numberOfOrdersPerUser)[names(numberOfOrdersPerUser)=="n"]<-"TotalOrder"
-onlyReturn <- daten[daten$return==1,]
-numberOfReturnsPerUser <- count(onlyReturn, user_id)
-names(numberOfReturnsPerUser)[names(numberOfReturnsPerUser)=="n"]<-"TotalReturn"
-returnsAndOrders <- join(numberOfOrdersPerUser, numberOfReturnsPerUser, by = "user_id", type = "left", match = "first")
-returnsAndOrders$TotalReturn[is.na(returnsAndOrders$TotalReturn)]<-0 #replace NA by 0
-returnsAndOrders$customersReturnRate<-returnsAndOrders[,3]/returnsAndOrders[,2]
-daten<-merge(daten, returnsAndOrders[, c("user_id", "customersReturnRate")], by="user_id")
-
-
 
 
 # ----------------------- End new variables
@@ -238,15 +226,15 @@ daten <- daten[,!(names(daten) %in% drops)]
 
 
 # ----------------------- Start: Binning
+
 binning <- woe.binning (df=daten, target.var="return", pred.var=c("delivery_time"), min.perc.class = 0.01)
 #woe.binning.plot(binning)
-#daten <- woe.binning.deploy(daten, binning, add.woe.or.dum.var = "woe") better way to apply binning than below?
 daten$delivery_time <- ifelse(is.na(daten$delivery_time), "Missing",
                               ifelse(daten$delivery_time <= 1, "<=1", ">1"))
 daten$delivery_time <- factor(daten$delivery_time)
-# Probably no further binning of numerical variables than delivery_time
-# ----------------------- End: Binning
+# - Only significant: delivery_time -
 
+# ----------------------- End: Binning
 
 
 
@@ -288,15 +276,22 @@ train.split <- train[woe.idx.train,] # Set for WoE calculation
 #tapply(train$user_title, train$return, summary)
 #tapply(train$ct_basket_size, train$return, summary)
 #tapply(train$ct_same_items, train$return, summary)
-woe.values <- woe(return ~ ., data=train.split, zeroadj=0.1)
+woe.values <- woe(return ~ ., data=train.split, zeroadj=0.05)
+woe.values_ids <- woe(return ~ item_id+brand_id+user_id+item_size, data=train.split, zeroadj=0.05)
 # - note: klaR assumes the first level of target to be the target level (WoE refer to no returns)
 
 ## - check for plausibility by plotting weights against their levels
 # *-1 because woe predicts how probable 0 appears, not how probable 1 is
 #barplot(-1*woe.values$woe$user_state)
-## replacement
+
+# - Replacement all WoE
 test.woe <- predict(woe.values, newdata=test, replace=TRUE)
 train.woe <- predict(woe.values, newdata=train, replace=TRUE)
+
+# - Replacement only Id-WoE data set
+test.2 <-predict(woe.values, newdata=test, replace=TRUE)
+train.2 <-predict(woe.values, newdata=train, replace=TRUE)
+
 # - Check if data was replaced correctly (because of that -1 shit thing)
 
 # ----------------------- End: WoE
@@ -311,9 +306,12 @@ normalizer <- caret::preProcess(train.woe[,names(train.woe) %in% c("item_price",
 nn.train.woe <- predict(normalizer, newdata = train.woe)
 nn.test.woe <- predict(normalizer, newdata = test.woe)
 
+test.3 <- predict(normalizer, newdata= test.2)
+train.3 <- predict(normalizer, newdata=train.3)
+
 # - Adjust return values for Neural Network
-nn.train.woe$return <- as.factor(ifelse(nn.train.woe$return == 1, 1, -1))
-nn.test.woe$return <- as.factor(ifelse(nn.test.woe$return == 1, 1, -1))
+#nn.train.woe$return <- as.factor(ifelse(nn.train.woe$return == 1, 1, -1))
+#nn.test.woe$return <- as.factor(ifelse(nn.test.woe$return == 1, 1, -1))
 
 # ----------------------- End: Prep Input for NN
 
