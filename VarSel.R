@@ -32,6 +32,8 @@ if(!require("parallelMap"))         install.packages("parallelMap");        libr
 woe.values$IV
 filtered <- names(woe.values$IV[woe.values$IV <0.02])
 
+
+woe.values_ids$IV
 # ----------------------- --> Should WoE be computed for all variables 
 
 
@@ -50,8 +52,13 @@ fisherScore <- function (feature, targetVariable)
 }
 
 # apply to numeric variables:
-fisher_scores <- apply(train.woe[,sapply(train.woe, is.numeric)], 2, fisherScore, train.woe$return)
-fisher_scores 
+fisher_scores_1 <- apply(train.woe[,sapply(train.woe, is.numeric)], 2, fisherScore, train.woe$return)
+fisher_scores_1
+fisher_scores_2 <- apply(train.2[,sapply(train.2, is.numeric)], 2, fisherScore, train.2$return)
+fisher_scores_2
+fisher_scores_3 <- apply(train.3[,sapply(train.3, is.numeric)], 2, fisherScore, train.3$return)
+fisher_scores_3
+
 # ----------------------- 
 
 
@@ -62,12 +69,24 @@ cor.mat <- cor(train.woe[, !(names(train.woe) == "return")])
 corrplot(cor.mat)
 
 ## function
-#cv.test = function(x,y) {
-#  CV = sqrt(chisq.test(x, y, correct=FALSE)$statistic /
-#              (length(x) * (min(length(unique(x)),length(unique(y))) - 1)))
-#  print.noquote("Cramér V / Phi:")
-#  return(as.numeric(CV))
-#}
+cv.test = function(x,y) {
+  CV = sqrt(chisq.test(x, y, correct=FALSE)$statistic /
+              (length(x) * (min(length(unique(x)),length(unique(y))) - 1)))
+  print.noquote("Cramér V / Phi:")
+  return(as.numeric(CV))
+}
+
+cv.test(train.2$return, train.2$user_title)
+cv.test(train.2$return, train.2$item_color)
+cv.test(train.2$return, train.2$user_state)
+cv.test(train.2$return, train.2$order_month)
+cv.test(train.2$return, train.2$delivery_time)
+
+cv.test(train.3$return, train.3$user_title)
+cv.test(train.3$return, train.3$item_color)
+cv.test(train.3$return, train.3$user_state)
+cv.test(train.3$return, train.3$order_month)
+cv.test(train.3$return, train.3$delivery_time)
 
 # apply to categorical variables
 
@@ -125,10 +144,10 @@ parallelStartSocket(3)
 set.seed(123)
 # - Define learning algorithms -
 rf <- makeLearner("classif.randomForest", predict.type="prob", par.vals=list("replace"=TRUE, "importance"=FALSE))
-nn <- makeLearner("classif.nnet", predict.type="prob") 
-                  #par.vals = list("trace" = FALSE, "maxit" = 400) ?
-lr <- makeLearner("classif.penalized.lasso", predict.type="prob")
-xgb <- makeLearner("classif.xgboost", predict.type="prob") #par.vals = list("verbose" = 1) hinzufügen?
+nn <- makeLearner("classif.nnet", predict.type="prob")
+lr <- makeLearner("classif.glmnet", predict.type="prob")
+#lr <- makeLearner("classif.penalized.lasso", predict.type="prob")
+xgb <- makeLearner("classif.xgboost", predict.type="prob")
 
 # - Stop parallel -
 parallelStop()
@@ -142,12 +161,12 @@ rdesc <- makeResampleDesc(method="CV", iters=5, stratify=TRUE)
 set.seed(123)
 
 # - Parallel feature selection for all models -
-#parallelStartSocket(3, level = "mlr.selectFeatures")
+parallelStartSocket(3, level = "mlr.selectFeatures")
 #featureSelectionRF <- selectFeatures(rf, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
-#featureSelectionNN <- selectFeatures(nn, task=nn.task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
+featureSelectionNN <- selectFeatures(nn, task=nn.task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
 #featureSelectionLR <- selectFeatures(lr, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
 #featureSelectionXGB <- selectFeatures(xgb, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
-#parallelStop()
+parallelStop()
 
 # - Number of variables in total - 
 ncol(task$env$train)
@@ -155,7 +174,7 @@ ncol(task$env$train)
 # - Variables selected by different models using treshold alpha -
 featureSelectionRF # user_id, item_id, delivery_time
 featureSelectionNN # user_id, item_id, delivery_time
-featureSelectionLR # usre_id, item_id
+featureSelectionLR # user_id, item_id
 featureSelectionXGB
 
 # remove irrelevant variables from dataset for each model respectively

@@ -54,6 +54,7 @@ rfw.parms <- makeParamSet(
 
 # mtry from half of squaretoot to 2 times squareroot
 # number of bagging iterations 5, 10, 15, 20, 25
+# number of trees 100, 200, 
 parallelStartSocket(3, level = "mlr.tuneParams")
 rfw.tuning <- tuneParams(rf, task = rf.task, resampling = rdesc,
                         par.set = rfw.parms, control = tuneControl, measures = mlr::auc)
@@ -72,14 +73,13 @@ auc
 
 
 
-# ----------------------- Start: Random Forest without wrapper
+# ----------------------- Start: Random Forest without wrapper - WoE data
 
 # - Set parameter, task, tune and update learner -
 set.seed(123)
 rf.parms <- makeParamSet(
-  makeIntegerParam("mtry", lower = round(sqrt(ncol(train.woe))/2),
-                   upper = round(sqrt(ncol(train.woe))*2)), 
-  makeIntegerParam("ntree", lower = 100, upper = 1000)
+  makeDiscreteParam("mtry", values= (sqrt(ncol(train.woe))*c(0.1,0.25,0.5,1,2,4))), 
+  makeDiscreteParam("ntree", values = c(100, 250, 500, 750, 1000 ))
 ) 
 parallelStartSocket(3, level = "mlr.tuneParams")
 rf.tuning <- tuneParams(rf, task = task, resampling = rdesc,
@@ -99,33 +99,26 @@ auc
 
 
 
-
-
-
-# ----------------------- Start: Logistic Regression wrapped
+# ----------------------- Start: Random Forest without wrapper - Test.2 (with categories)
 
 # - Set parameter, task, tune and update learner -
 set.seed(123)
-lr.train.woe <- train.woe[,names(train.woe) %in% c("return","woe.user_id", "woe.item_id")]
-lr.task <- makeClassifTask(data=lr.train.woe, target="return", positive="1")
+rf.task2 <- makeClassifTask(data=train.2, target="return", positive="1")
 
-lr.parms <- makeParamSet(
-  makeNumericParam("lambda1", lower = 0, upper =200) 
-) 
 parallelStartSocket(3, level = "mlr.tuneParams")
-lrw.tuning <- tuneParams(lr, task = lr.task, resampling = rdesc,
-                        par.set = lr.parms, control = tuneControl, measures = mlr::auc)
+rf_cat.tuning <- tuneParams(rf, task = rf.task2, resampling = rdesc,
+                        par.set = rf.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
-lrw.tuning$x
-lrw.tuning <- setHyperPars(lr, par.vals = lrw.tuning$x) # necessary or how is tuned data extracted?
+rf_cat.tuning$x
+rf_cat.tuning <- setHyperPars(rf, par.vals = rf_cat.tuning$x)
 
-# - Train, predict, AUC 
-modelLib[["lr_wrap"]] <- mlr::train(lrw.tuning, task = lr.task)
-yhat[["lr_wrap"]] <- predict(modelLib[["lr_wrap"]], newdata = lr.test.woe)
-auc[["lr_wrap"]] <- mlr::performance(yhat[["lr_wrap"]], measures = mlr::auc)
+# - Train, predict, AUC -
+modelLib[["rf.cat"]] <- mlr::train(rf.tuning, task = rf.task2)
+yhat[["rf.cat"]] <- predict(modelLib[["rf.cat"]], newdata = test.2)
+auc[["rf.cat"]] <- mlr::performance(yhat[["rf.cat"]], measures = mlr::auc)
 auc
 
-# ----------------------- End: Logistic Regression
+# ----------------------- End: Random Forest without wrapper
 
 
 
@@ -135,7 +128,7 @@ auc
 # - Set parameter, task, tune and update learner -
 set.seed(123)
 lr.parms <- makeParamSet(
-  makeNumericParam("lambda1", lower = 0, upper =200) 
+  makeNumericParam("s", lower = 0.001, upper =1) 
 ) 
 parallelStartSocket(3, level = "mlr.tuneParams")
 lr.tuning <- tuneParams(lr, task = task, resampling = rdesc,
@@ -152,6 +145,26 @@ auc
 
 # ----------------------- End: Logistic Regression
 
+
+
+# ----------------------- Start: Logistic Regression no wrap - Test.2 - Categories
+
+# - Set parameter, task, tune and update learner -
+set.seed(123)
+parallelStartSocket(3, level = "mlr.tuneParams")
+lr.tuning <- tuneParams(lr, task = task, resampling = rdesc,
+                        par.set = lr.parms, control = tuneControl, measures = mlr::auc)
+parallelStop()
+lr.tuning$x
+lr.tuning <- setHyperPars(lr, par.vals = lr.tuning$x) # necessary or how is tuned data extracted?
+
+# - Train, predict, AUC -
+modelLib[["lr"]] <- mlr::train(lr.tuning, task = task)
+yhat[["lr"]] <- predict(modelLib[["lr"]], newdata = test.woe)
+auc[["lr"]] <- mlr::performance(yhat[["lr"]], measures = mlr::auc)
+auc
+
+# ----------------------- End: Logistic Regression
 
 
 
