@@ -32,9 +32,8 @@ if(!require("eeptools"))      install.packages("eeptools");     library("eeptool
 if(!require("xgboost"))       install.packages("xgboost");      library("xgboost")
 if(!require("penalized"))     install.packages("penalized");    library("penalized")
 if(!require("neuralnet"))     install.packages("neuralnet");    library("neuralnet")
-
-if(!require("woeBinning"))     install.packages("woeBinning");    library("woeBinning")
-if(!require("klaR"))     install.packages("klaR");    library("klaR")
+if(!require("woeBinning"))    install.packages("woeBinning");   library("woeBinning")
+if(!require("klaR"))          install.packages("klaR");         library("klaR")
 
 
 
@@ -198,7 +197,7 @@ daten <- join(daten, dplyr::count(daten, order_date, user_id),
 
 
 
-# ---- The number of same item user bought within the same basket ----
+# ---- The number of same items a user bought within the same basket ----
 daten <- join(daten, count(daten, order_date, user_id, item_id),
                          by = c("order_date", "user_id","item_id"))
 names(daten)[names(daten) == "n"] <- "ct_basket_size"
