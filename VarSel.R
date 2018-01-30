@@ -55,9 +55,7 @@ fisherScore <- function (feature, targetVariable)
 fisher_scores_1 <- apply(train.woe[,sapply(train.woe, is.numeric)], 2, fisherScore, train.woe$return)
 fisher_scores_1
 fisher_scores_2 <- apply(train.2[,sapply(train.2, is.numeric)], 2, fisherScore, train.2$return)
-fisher_scores_2
-fisher_scores_3 <- apply(train.3[,sapply(train.3, is.numeric)], 2, fisherScore, train.3$return)
-fisher_scores_3
+fisher_scores_2 # same for train.3
 
 # ----------------------- 
 
@@ -65,7 +63,7 @@ fisher_scores_3
 
 
 # ----------------------- Categorical: Cramer’s V
-cor.mat <- cor(train.woe[, !(names(train.woe) == "return")])
+cor.mat <- cor(train.2[, !(names(train.2) == "return")])
 corrplot(cor.mat)
 
 ## function
@@ -76,17 +74,13 @@ cv.test = function(x,y) {
   return(as.numeric(CV))
 }
 
-cv.test(train.2$return, train.2$user_title)
-cv.test(train.2$return, train.2$item_color)
-cv.test(train.2$return, train.2$user_state)
-cv.test(train.2$return, train.2$order_month)
-cv.test(train.2$return, train.2$delivery_time)
+cv.test(train.2$user_title , train.2$return)
+cv.test(train.2$item_color , train.2$return)
+cv.test(train.2$user_state , train.2$return)
+cv.test(train.2$order_month , train.2$return)
+cv.test(train.2$delivery_time , train.2$return)
 
-cv.test(train.3$return, train.3$user_title)
-cv.test(train.3$return, train.3$item_color)
-cv.test(train.3$return, train.3$user_state)
-cv.test(train.3$return, train.3$order_month)
-cv.test(train.3$return, train.3$delivery_time)
+# - Same for train.3 - 
 
 # apply to categorical variables
 

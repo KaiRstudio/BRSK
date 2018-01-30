@@ -47,9 +47,8 @@ set.seed(123)
 rf.task <- makeClassifTask(data=rf.train.woe, target="return", positive="1")
 rfw.parms <- makeParamSet(
   # The recommendation for mtry by Breiman is squareroot number of columns
-  makeIntegerParam("mtry", lower = round(sqrt(ncol(rf.train.woe))/2),
-                   upper = round(sqrt(ncol(rf.train.woe))*2)), # Number of features selected at each node, smaller -> faster
-  makeIntegerParam("ntree", lower = 100, upper = 1000) # Number of tree, smaller -> faster
+  makeDiscreteParam("mtry", values= (sqrt(ncol(rf.train.woe))*c(0.1,0.25,0.5,1,2,4))), # Number of features selected at each node, smaller -> faster
+  makeDiscreteParam("ntree", values = c(100, 250, 500, 750, 1000 )) # Number of tree, smaller -> faster
 ) 
 
 # mtry from half of squaretoot to 2 times squareroot
@@ -106,19 +105,19 @@ set.seed(123)
 rf.task2 <- makeClassifTask(data=train.2, target="return", positive="1")
 
 parallelStartSocket(3, level = "mlr.tuneParams")
-rf_cat.tuning <- tuneParams(rf, task = rf.task2, resampling = rdesc,
+rf.tuning.cat <- tuneParams(rf, task = rf.task2, resampling = rdesc,
                         par.set = rf.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
-rf_cat.tuning$x
-rf_cat.tuning <- setHyperPars(rf, par.vals = rf_cat.tuning$x)
+rf.tuning.cat$x
+rf.tuning.cat <- setHyperPars(rf, par.vals = rf.tuning.cat$x)
 
 # - Train, predict, AUC -
-modelLib[["rf.cat"]] <- mlr::train(rf.tuning, task = rf.task2)
+modelLib[["rf.cat"]] <- mlr::train(rf.tuning.cat, task = rf.task2)
 yhat[["rf.cat"]] <- predict(modelLib[["rf.cat"]], newdata = test.2)
 auc[["rf.cat"]] <- mlr::performance(yhat[["rf.cat"]], measures = mlr::auc)
 auc
 
-# ----------------------- End: Random Forest without wrapper
+# ----------------------- End: Random Forest with categories without wrapper
 
 
 
@@ -128,7 +127,8 @@ auc
 # - Set parameter, task, tune and update learner -
 set.seed(123)
 lr.parms <- makeParamSet(
-  makeNumericParam("s", lower = 0.001, upper =1) 
+  makeNumericParam("s", lower = 0.001, upper =1), 
+  makeDiscreteParam("alpha", value = 1)
 ) 
 parallelStartSocket(3, level = "mlr.tuneParams")
 lr.tuning <- tuneParams(lr, task = task, resampling = rdesc,
@@ -151,21 +151,71 @@ auc
 
 # - Set parameter, task, tune and update learner -
 set.seed(123)
+lr.task.cat <- makeClassifTask(data=train.2, target="return", positive="1")
+
 parallelStartSocket(3, level = "mlr.tuneParams")
-lr.tuning <- tuneParams(lr, task = task, resampling = rdesc,
+lr.tuning.cat <- tuneParams(lr, task = lr.task.cat, resampling = rdesc,
                         par.set = lr.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
-lr.tuning$x
-lr.tuning <- setHyperPars(lr, par.vals = lr.tuning$x) # necessary or how is tuned data extracted?
+lr.tuning.cat$x
+lr.tuning.cat <- setHyperPars(lr, par.vals = lr.tuning.cat$x) # necessary or how is tuned data extracted?
 
 # - Train, predict, AUC -
-modelLib[["lr"]] <- mlr::train(lr.tuning, task = task)
-yhat[["lr"]] <- predict(modelLib[["lr"]], newdata = test.woe)
-auc[["lr"]] <- mlr::performance(yhat[["lr"]], measures = mlr::auc)
+modelLib[["lr.cat"]] <- mlr::train(lr.tuning.cat, task = lr.task.cat)
+yhat[["lr.cat"]] <- predict(modelLib[["lr.cat"]], newdata = test.2)
+auc[["lr.cat"]] <- mlr::performance(yhat[["lr.cat"]], measures = mlr::auc)
 auc
 
 # ----------------------- End: Logistic Regression
 
+
+
+
+
+# ----------------------- Start: Logistic Regression no wrap - Test.3 - Categories normalized
+
+# - Set parameter, task, tune and update learner -
+set.seed(123)
+lr.task.cat.norm <- makeClassifTask(data=train.3, target="return", positive="1")
+
+parallelStartSocket(3, level = "mlr.tuneParams")
+lr.tuning.cat.norm <- tuneParams(lr, task = lr.task.cat.norm, resampling = rdesc,
+                            par.set = lr.parms, control = tuneControl, measures = mlr::auc)
+parallelStop()
+lr.tuning.cat.norm$x
+lr.tuning.cat.norm <- setHyperPars(lr, par.vals = lr.tuning.cat.norm$x) # necessary or how is tuned data extracted?
+
+# - Train, predict, AUC -
+modelLib[["lr.cat.norm"]] <- mlr::train(lr.tuning.cat.norm, task = lr.task.cat.norm)
+yhat[["lr.cat.norm"]] <- predict(modelLib[["lr.cat.norm"]], newdata = test.3)
+auc[["lr.cat.norm"]] <- mlr::performance(yhat[["lr.cat.norm"]], measures = mlr::auc)
+auc
+
+# ----------------------- End: Logistic Regression
+
+
+
+
+# ----------------------- Start: Logistic Regression no wrap - normalized
+
+# - Set parameter, task, tune and update learner -
+set.seed(123)
+lr.task.nn <- makeClassifTask(data=nn.train.woe, target="return", positive="1")
+
+parallelStartSocket(3, level = "mlr.tuneParams")
+lr.tuning.nn <- tuneParams(lr, task = lr.task.nn, resampling = rdesc,
+                                 par.set = lr.parms, control = tuneControl, measures = mlr::auc)
+parallelStop()
+lr.tuning.nn$x
+lr.tuning.nn <- setHyperPars(lr, par.vals = lr.tuning.nn$x) # necessary or how is tuned data extracted?
+
+# - Train, predict, AUC -
+modelLib[["lr.nn"]] <- mlr::train(lr.tuning.nn, task = lr.task.nn)
+yhat[["lr.nn"]] <- predict(modelLib[["lr.nn"]], newdata = nn.test.woe)
+auc[["lr.nn"]] <- mlr::performance(yhat[["lr.nn"]], measures = mlr::auc)
+auc
+
+# ----------------------- End: Logistic Regression
 
 
 
@@ -175,9 +225,8 @@ auc
 set.seed(123)
 nn.task <- makeClassifTask(data=nn.train.woe, target="return", positive="1")
 nn.parms <- makeParamSet(
-  makeNumericParam("decay", lower = -4, upper = 0, trafo = function(x) 10^x), 
-  makeDiscreteParam("size", values = c(1,2,4,8,16)),
-  makeIntegerParam("maxit", lower= 200, upper=800)) 
+  makeNumericParam("decay", lower = -8, upper = 0, trafo = function(x) 10^(0.5*x)), 
+  makeDiscreteParam("size", values = c(1,2,4,8,16))) 
 # number of neurons in the hidden layer  
 # decay from 0.0001 to 1
 parallelStartSocket(3)
@@ -203,12 +252,12 @@ auc
 set.seed(123)
 xgb.parms <- makeParamSet(
   makeIntegerParam("nrounds", lower= 100,upper = 200), 
-  makeIntegerParam("max_depth", lower= 3, upper= 10), 
-  makeNumericParam("eta", lower = 0.01, upper = 0.5), 
-  makeNumericParam("gamma", lower =0, upper= 0.3),
-  makeNumericParam("colsample_bytree", lower= 0.6, upper= 0.8),
-  makeNumericParam("min_child_weight",lower=0.8,upper=2),
-  makeNumericParam("subsample", lower= 0.8, upper=1)
+  makeDiscreteParam("max_depth", values =c(3,5,7,9,12,15,17,25)), 
+  makeDiscreteParam("eta", values= c(0.01, 0.015, 0.025, 0.05, 0.1)), 
+  makeNumericParam("gamma", lower =0.01, upper= 0.1),
+  makeDiscreteParam("colsample_bytree", values =c(0.6, 0.8, 1)),
+  makeDiscreteParam("min_child_weight",values =c(1,3,5,7)),
+  makeDiscreteParam("subsample", values =c(0.6, 0.8, 1))
 )
 # choose lambda and alpha randomly - how?
 # currently default: lambda = 1, alpha= 0

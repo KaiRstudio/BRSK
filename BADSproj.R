@@ -288,8 +288,8 @@ test.woe <- predict(woe.values, newdata=test, replace=TRUE)
 train.woe <- predict(woe.values, newdata=train, replace=TRUE)
 
 # - Replacement only Id-WoE data set
-test.2 <-predict(woe.values, newdata=test, replace=TRUE)
-train.2 <-predict(woe.values, newdata=train, replace=TRUE)
+test.2 <-predict(woe.values_ids, newdata=test, replace=TRUE)
+train.2 <-predict(woe.values_ids, newdata=train, replace=TRUE)
 
 # - Check if data was replaced correctly (because of that -1 shit thing)
 
@@ -306,7 +306,7 @@ nn.train.woe <- predict(normalizer, newdata = train.woe)
 nn.test.woe <- predict(normalizer, newdata = test.woe)
 
 test.3 <- predict(normalizer, newdata= test.2)
-train.3 <- predict(normalizer, newdata=train.3)
+train.3 <- predict(normalizer, newdata=train.2)
 
 # - Adjust return values for Neural Network
 #nn.train.woe$return <- as.factor(ifelse(nn.train.woe$return == 1, 1, -1))
