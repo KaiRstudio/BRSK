@@ -335,4 +335,3 @@ train.3 <- predict(normalizer, newdata=train.2)
 #     as well as its 3€ plus 10 % ov value.
 # 4)  likelihood ratio test; AIC; step function (direction: both)
 # 7)  review at the end which packages we really need
-# 12) text should include that when you are the shopowner and you set up this analysis, some open questions could be answered with more background knowlegde
