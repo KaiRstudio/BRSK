@@ -11,11 +11,18 @@ colnames(costs) <- rownames(costs) <-levels(daten$return)
 #theoretical threshold
 th <- costs[2,1]/(costs[2,1] + costs[1,2])
 
-# needs to be done for each model and for each threshold --> minimised costs wanted
-falsely.not.warned <- sum(3+0.1(daten$item_price[no warning, returned]))
-falsely.not.warned <- sum(3+0.1(daten$item_price[yhat[,3]<th & daten$return==1]))
 
-falsely.warned <- sum(daten$item_price[warning, kept])
-falsely.warned <- sum(daten$item_price[yhat[,3]>th & daten$return==0])
+falsely.not.warned <- sum(3+0.1*(daten$item_price[no warning, returned]))
+# costs as sum of item prices within test sample, where no warning is given but item is returned
+falsely.not.warned <- sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<th & test.2$return==1])) # theoretical threshold
+falsely.not.warned2 <- sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<0.5 & test.2$return==1])) # naive threshold
 
-exp.costs <- 2.5*falsely.not.warned + 0.5*falsely.warned/24999
+falsely.warned <- sum(itemprices[warning, kept])
+# costs as sum of item prices within test sample, where warning was given although item would have been kept
+falsely.warned <- sum(test.2$item_price[rf.cat.pred$data[,3]>th & test.2$return==0]) # theoretical threshold
+falsely.warned2 <- sum(test.2$item_price[rf.cat.pred$data[,3]>0.5 & test.2$return==0]) # naive threshold
+
+exp.costs <- (2.5*falsely.not.warned + 0.5*falsely.warned)
+exp.costs # costs for th
+exp.costs2 <- (2.5*falsely.not.warned2 + 0.5*falsely.warned2)
+exp.costs2 # costs for naive
