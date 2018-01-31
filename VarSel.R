@@ -137,7 +137,7 @@ parallelStartSocket(3)
 
 set.seed(123)
 # - Define learning algorithms -
-rf <- makeLearner("classif.randomForest", predict.type="prob", par.vals=list("replace"=TRUE, "importance"=FALSE))
+rf <- makeLearner("classif.randomForest", predict.type="prob", par.vals=list("replace"=TRUE, "importance"=TRUE))
 nn <- makeLearner("classif.nnet", predict.type="prob")
 lr <- makeLearner("classif.glmnet", predict.type="prob")
 #lr <- makeLearner("classif.penalized.lasso", predict.type="prob")
