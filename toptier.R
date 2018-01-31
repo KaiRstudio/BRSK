@@ -1,23 +1,44 @@
-if(!require("repmis")) install.packages("repmis");library("repmis")
+# --------------  BADS Final Assignment Group 44 -------------
+
+#   - Sebastian Gütgemann (589623)  ~ s.guetgemann@gmx.net
+#   - Rieke Ackermann     (588611)  ~ rieke.ackermann@web.de
+#   - Sena Aydin          (594644)  ~ senaaydin484@gmail.com
+#   - Kai Dessau          (559766)  ~ kai-dessau@web.de
 
 
-# 1. Load, prep & clean training/test data
+#   - File to load the whole set -
+
+# 1. Load all packages 
+install.packages <- function(x){
+  for( i in x ){
+    if( ! require( i , character.only = TRUE ) ){
+      install.packages( i , dependencies = TRUE )
+      require( i , character.only = TRUE )}}}
+
+install.packages( c("plyr" , "dplyr" , "stringdist", "rpart", "psych", "car", "Amelia",
+                    "boot", "caret", "rpart", "rattle", "rpart.plot", "RColorBrewer", "rms",
+                    "pROC", "e1071", "randomForest", "hmeasure", "repmis", "ggplot2", "eeptools",
+                    "xgboost", "penalized", "neuralnet", "woeBinning", "klaR", "NeuralNetTools", 
+                    "glmnet", "mlr", "parallelMap", "nnet", "parallel", "repmis" ))
+
+
+# 2. Load, prep & clean training/test data
 source("https://raw.githubusercontent.com/KaiRstudio/BRSK/master/BADSproj.R")
 
 
-# 2. Variable selection by filter & wrapper
+# 3. Variable selection by filter & wrapper
 source("https://raw.githubusercontent.com/KaiRstudio/BRSK/master/VarSel.R")
 
 
-# 3. Parameter tuning and performances
+# 4. Parameter tuning and performances
 source("https://raw.githubusercontent.com/KaiRstudio/BRSK/master/Modeling.R") # uses MODELING code
 
 
-# 4. Apply cost sensitive learning
+# 5. Apply cost sensitive learning
 source("https://raw.githubusercontent.com/KaiRstudio/BRSK/master/AdapToCSL.R")
 
 
-# 5. Load and prep unknown data
+# 6. Load and prep unknown data
 source("https://raw.githubusercontent.com/KaiRstudio/BRSK/master/Unknown_data_prep.R")
 
 
@@ -28,5 +49,4 @@ source("https://raw.githubusercontent.com/KaiRstudio/BRSK/master/Unknown_data_pr
 
 
 
-# ------------------- Final data prediction
-# - Use best model to predict unknown data -
+# Predict final data

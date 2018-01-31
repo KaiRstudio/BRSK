@@ -1,13 +1,12 @@
 # - Read unknown data
 githubURL <- "https://raw.githubusercontent.com/KaiRstudio/BRSK/be86d55f0a62bfc0ebeb88a6103d660e4711f68f/BADS_WS1718_class.csv"
-nd <- source_data(githubURL, header = "auto", sep=",")
+nd <- source_data(githubURL, sha1 = "c09db6b674539c097b3d510429007190da761ec1", header = "auto", sep=",")
 
 
 # - Prep unknown data by using respective formulas from original data prep
 
 # ----------------------- Formatting
 
-formatofdate        <- "%Y-%m-%d"
 nd$order_date    <- as.Date(nd$order_date, format = formatofdate)
 nd$delivery_date <- as.Date(nd$delivery_date, format = formatofdate)
 nd$user_reg_date <- as.Date(nd$user_reg_date, format = formatofdate)
@@ -23,44 +22,7 @@ nd$return        <- as.factor(nd$return)
 
 
 
-# ----------------------- General Terms
-
-# - Calculate age -
-age <- function(from, to) {
-  from_lt = as.POSIXlt(from)
-  to_lt = as.POSIXlt(to)
-  age = to_lt$year - from_lt$year
-  ifelse(
-    to_lt$mon < from_lt$mon |
-      (to_lt$mon == from_lt$mon & to_lt$mday < from_lt$mday),
-    age - 1,
-    age)} ## why not just use difference between order date and yob?
-
-
-# - Exclude Outlier by Z-Score -
-Z.outlier <- function(x){
-  Zscore <- scale(x)
-  x[Zscore >3] <- NA
-  x[Zscore <(-3)] <- NA
-  return(x)}
-
-
-# - Aggregate color levels -
-agg.col <- function (df.col) {
-  df.col <- factor(df.col)
-  df.col <- ifelse(df.col %in% c("?"), "Other",
-                   ifelse(df.col %in% c("petrol", "blau", "blue", "azure", "cobalt blue", "dark navy", "darkblue", "turquoise", "silver", "navy", "aqua", "aquamarine", "baltic blue", "darkblue"), "blue",
-                          ifelse(df.col %in% c("red", "orange", "purple", "currant purple", "pink", "antique pink", "crimson", "bordeaux", "berry", "fuchsia", "perlmutt", "coral", "hibiscus", "magenta", "terracotta", "dark garnet"), "red",
-                                 ifelse(df.col %in% c("green", "olive", "oliv", "dark oliv", "mint", "aubergine", "lemon", "nature", "khaki", "avocado", "jade"), "green",
-                                        ifelse(df.col %in% c("mocca", "brwon", "brown", "beige", "kanel", "mahagoni", "copper coin", "cognac", "caramel"),"brown",
-                                               ifelse(df.col %in% c("apricot", "yellow", "vanille", "gold", "ingwer", "white", "mango", "almond", "champagner", "creme", "curry", "ivory", "ocher"), "yellow",
-                                                      ifelse(df.col %in% c("grey", "black", "dark grey", "graphite", "iron", "habana", "ebony", "amethyst", "basalt", "ash", "ancient", "anthracite", "denim", "dark denim"), "dark", "Other")))))))
-  df.col <- factor(df.col)}
-
-
-
-
-# ----------------------- Start: Prep Existing Variables
+# ----------------------- Start: Prep Variables
 
 # ---- Dates ----
 nd$delivery_date[nd$order_date>nd$delivery_date] <-NA

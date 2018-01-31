@@ -1,8 +1,7 @@
-#   BADS Final Assignment Group 
-#   - Sebastian Gütgemann (589623)  ~ s.guetgemann@gmx.net
-#   - Rieke Ackermann     (588611)  ~ rieke.ackermann@web.de
-#   - Sena Aydin          (594644)  ~ senaaydin484@gmail.com
-#   - Kai Dessau          (559766)  ~ kai-dessau@web.de
+
+
+# -------------------------------- Data Prep training & test ----------------------------
+
 
 
 
@@ -38,12 +37,16 @@ if(!require("klaR"))          install.packages("klaR");         library("klaR")
 
 # ----------------------- Packages
 if(!require("NeuralNetTools")) install.packages("NeuralNetTools"); library("NeuralNetTools")
-if(!require("corrplot"))         install.packages("corrplot");        library("corrplot")
 if(!require("glmnet"))         install.packages("glmnet");        library("glmnet")
-if(!require("caret"))         install.packages("caret");        library("caret")
 if(!require("mlr"))         install.packages("mlr");        library("mlr")
 if(!require("parallelMap"))         install.packages("parallelMap");        library("parallelMap")
+
+# ----------------------- Packages
+if(!require("nnet"))            install.packages("nnet");           library("nnet")
+if(!require("parallel"))        install.packages("parallel");       library("parallel")
+
 # ----------------------- 
+if(!require("repmis")) install.packages("repmis");library("repmis")
 
 
 

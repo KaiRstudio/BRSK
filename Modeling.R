@@ -1,17 +1,5 @@
-# file for building models
-# For each model:
-# Parameter optimization (=Loops over parameters of model)
-# Loops over choice of variables
-# Training/Testing    
-# data splitting, model prediction, cross validation
 
-# ----------------------- Packages
-if(!require("NeuralNetTools"))  install.packages("NeuralNetTools"); library("NeuralNetTools")
-if(!require("caret"))           install.packages("caret");          library("caret")
-if(!require("mlr"))             install.packages("mlr");            library("mlr")
-if(!require("nnet"))            install.packages("nnet");           library("nnet")
-if(!require("glmnet"))          install.packages("glmnet");         library("glmnet")
-if(!require("parallel"))        install.packages("parallel");       library("parallel")
+
 
 # ----------------------- Structure to save results/tune control
 modelLib <- list()
