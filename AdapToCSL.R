@@ -26,3 +26,4 @@ exp.costs <- (2.5*falsely.not.warned + 0.5*falsely.warned)
 exp.costs # costs for th
 exp.costs2 <- (2.5*falsely.not.warned2 + 0.5*falsely.warned2)
 exp.costs2 # costs for naive
+
