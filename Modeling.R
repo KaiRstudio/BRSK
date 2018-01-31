@@ -45,9 +45,10 @@ task <- makeClassifTask(data=train.woe, target="return", positive="1")
 # - Set parameter, task, tune and update learner -
 set.seed(123)
 rf.task <- makeClassifTask(data=rf.train.woe, target="return", positive="1")
+mtry.rfw.set <- sqrt(ncol(rf.train.woe))*c(0.1,0.25,0.5,1,2,4) # c(0,1,2,4,8)
 rfw.parms <- makeParamSet(
   # The recommendation for mtry by Breiman is squareroot number of columns
-  makeDiscreteParam("mtry", values= (sqrt(ncol(rf.train.woe))*c(0.1,0.25,0.5,1,2,4))), # Number of features selected at each node, smaller -> faster
+  makeDiscreteParam("mtry", values= c(0,1,2,4,8)), # Number of features selected at each node, smaller -> faster
   makeDiscreteParam("ntree", values = c(100, 250, 500, 750, 1000 )) # Number of tree, smaller -> faster
 ) 
 
@@ -76,8 +77,9 @@ auc
 
 # - Set parameter, task, tune and update learner -
 set.seed(123)
+mtry.set <- sqrt(ncol(train.woe))*c(0.1,0.25,0.5,1,2,4)
 rf.parms <- makeParamSet(
-  makeDiscreteParam("mtry", values= (sqrt(ncol(train.woe))*c(0.1,0.25,0.5,1,2,4))), 
+  makeDiscreteParam("mtry", values= round(mtry.set)), 
   makeDiscreteParam("ntree", values = c(100, 250, 500, 750, 1000 ))
 ) 
 parallelStartSocket(3, level = "mlr.tuneParams")
@@ -252,24 +254,23 @@ auc
 set.seed(123)
 xgb.parms <- makeParamSet(
   makeIntegerParam("nrounds", lower= 100,upper = 200), 
-  makeDiscreteParam("max_depth", values =c(3,5,7,9,12,15,17,25)), 
-  makeDiscreteParam("eta", values= c(0.01, 0.015, 0.025, 0.05, 0.1)), 
+  makeDiscreteParam("max_depth", values =c(3,7,12,17,25)), 
+  makeNumericParam("eta", lower =0.01, upper= 0.1),
   makeNumericParam("gamma", lower =0.01, upper= 0.1),
-  makeDiscreteParam("colsample_bytree", values =c(0.6, 0.8, 1)),
-  makeDiscreteParam("min_child_weight",values =c(1,3,5,7)),
-  makeDiscreteParam("subsample", values =c(0.6, 0.8, 1))
+  makeNumericParam("colsample_bytree", lower =0.6, upper= 1),
+  makeIntegerParam("min_child_weight",lower = 1, upper = 7),
+  makeNumericParam("subsample", lower =0.6, upper= 1)
 )
 # choose lambda and alpha randomly - how?
 # currently default: lambda = 1, alpha= 0
 # eta went until 0.15 in excercise
 # nrounds = number of iterations/trees?
-parallelStartSocket(3, level = "mlr.tuneParams")
+parallelStartSocket(3)
 xgb.tuning <- tuneParams(xgb, task = task, resampling = rdesc,
                          par.set = xgb.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
 xgb.tuning$x
-xgb <- setHyperPars(xgb, par.vals = c(xgb.tuning$x, "verbose" = 0)) # What is verbose and do we need to do that shit?
-
+xgb <- setHyperPars(xgb, par.vals=xgb.tuning$x)
 # - Train, predict, AUC -
 modelLib[["xgb"]] <- mlr::train(xgb, task = task)
 yhat[["xgb"]] <- predict(modelLib[["xgb"]], newdata = test.woe)
