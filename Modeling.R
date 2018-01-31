@@ -41,32 +41,32 @@ task <- makeClassifTask(data=train.woe, target="return", positive="1")
 # ----------------------- # ----------------------- # ----------------------- # ----------------------- 
 
 # ----------------------- Start: Random Forest with wrapper
-
+# ---------------------------- Don't use because less good -----
 # - Set parameter, task, tune and update learner -
-set.seed(123)
-rf.task <- makeClassifTask(data=rf.train.woe, target="return", positive="1")
-mtry.rfw.set <- sqrt(ncol(rf.train.woe))*c(0.1,0.25,0.5,1,2,4) # c(0,1,2,4,8)
-rfw.parms <- makeParamSet(
-  # The recommendation for mtry by Breiman is squareroot number of columns
-  makeDiscreteParam("mtry", values= c(0,1,2,4,8)), # Number of features selected at each node, smaller -> faster
-  makeDiscreteParam("ntree", values = c(100, 250, 500, 750, 1000 )) # Number of tree, smaller -> faster
-) 
+#set.seed(123)
+#rf.task <- makeClassifTask(data=rf.train.woe, target="return", positive="1")
+#mtry.rfw.set <- sqrt(ncol(rf.train.woe))*c(0.1,0.25,0.5,1,2,4) # c(0,1,2,4,8)
+#rfw.parms <- makeParamSet(
+# The recommendation for mtry by Breiman is squareroot number of columns
+#  makeDiscreteParam("mtry", values= c(0,1,2,4,8)), # Number of features selected at each node, smaller -> faster
+#  makeDiscreteParam("ntree", values = c(100, 250, 500, 750, 1000 )) # Number of tree, smaller -> faster
+#) 
 
 # mtry from half of squaretoot to 2 times squareroot
 # number of bagging iterations 5, 10, 15, 20, 25
 # number of trees 100, 200, 
-parallelStartSocket(3, level = "mlr.tuneParams")
-rfw.tuning <- tuneParams(rf, task = rf.task, resampling = rdesc,
-                        par.set = rfw.parms, control = tuneControl, measures = mlr::auc)
-parallelStop()
-rfw.tuning$x
-rfw.tuning <- setHyperPars(rf, par.vals = rfw.tuning$x) 
+#parallelStartSocket(3, level = "mlr.tuneParams")
+#rfw.tuning <- tuneParams(rf, task = rf.task, resampling = rdesc,
+#                        par.set = rfw.parms, control = tuneControl, measures = mlr::auc)
+#parallelStop()
+#rfw.tuning$x
+#rfw.tuning <- setHyperPars(rf, par.vals = rfw.tuning$x) 
 
 # - Train, predict, AUC -
-modelLib[["rf_wrap"]] <- mlr::train(rfw.tuning, task = rf.task)
-yhat[["rf_wrap"]] <- predict(modelLib[["rf_wrap"]], newdata = rf.test.woe)
-auc[["rf_wrap"]] <- mlr::performance(yhat[["rf_wrap"]], measures = mlr::auc)
-auc
+#modelLib[["rf_wrap"]] <- mlr::train(rfw.tuning, task = rf.task)
+#yhat[["rf_wrap"]] <- predict(modelLib[["rf_wrap"]], newdata = rf.test.woe)
+#auc[["rf_wrap"]] <- mlr::performance(yhat[["rf_wrap"]], measures = mlr::auc)
+#auc
 
 # ----------------------- End: Random Forest with wrapper
 
@@ -108,7 +108,7 @@ rf.task2 <- makeClassifTask(data=train.2, target="return", positive="1")
 
 parallelStartSocket(3, level = "mlr.tuneParams")
 rf.tuning.cat <- tuneParams(rf, task = rf.task2, resampling = rdesc,
-                        par.set = rf.parms, control = tuneControl, measures = mlr::auc)
+                            par.set = rf.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
 rf.tuning.cat$x
 rf.tuning.cat <- setHyperPars(rf, par.vals = rf.tuning.cat$x)
@@ -157,7 +157,7 @@ lr.task.cat <- makeClassifTask(data=train.2, target="return", positive="1")
 
 parallelStartSocket(3, level = "mlr.tuneParams")
 lr.tuning.cat <- tuneParams(lr, task = lr.task.cat, resampling = rdesc,
-                        par.set = lr.parms, control = tuneControl, measures = mlr::auc)
+                            par.set = lr.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
 lr.tuning.cat$x
 lr.tuning.cat <- setHyperPars(lr, par.vals = lr.tuning.cat$x) # necessary or how is tuned data extracted?
@@ -175,49 +175,27 @@ auc
 
 
 # ----------------------- Start: Logistic Regression no wrap - Test.3 - Categories normalized
+# --------------------- Don't use because it is not good
 
 # - Set parameter, task, tune and update learner -
-set.seed(123)
-lr.task.cat.norm <- makeClassifTask(data=train.3, target="return", positive="1")
+#set.seed(123)
+#lr.task.cat.norm <- makeClassifTask(data=train.3, target="return", positive="1")
 
-parallelStartSocket(3, level = "mlr.tuneParams")
-lr.tuning.cat.norm <- tuneParams(lr, task = lr.task.cat.norm, resampling = rdesc,
-                            par.set = lr.parms, control = tuneControl, measures = mlr::auc)
-parallelStop()
-lr.tuning.cat.norm$x
-lr.tuning.cat.norm <- setHyperPars(lr, par.vals = lr.tuning.cat.norm$x) # necessary or how is tuned data extracted?
+#parallelStartSocket(3, level = "mlr.tuneParams")
+#lr.tuning.cat.norm <- tuneParams(lr, task = lr.task.cat.norm, resampling = rdesc,
+#                            par.set = lr.parms, control = tuneControl, measures = mlr::auc)
+#parallelStop()
+#lr.tuning.cat.norm$x
+#lr.tuning.cat.norm <- setHyperPars(lr, par.vals = lr.tuning.cat.norm$x) # necessary or how is tuned data extracted?
 
 # - Train, predict, AUC -
-modelLib[["lr.cat.norm"]] <- mlr::train(lr.tuning.cat.norm, task = lr.task.cat.norm)
-yhat[["lr.cat.norm"]] <- predict(modelLib[["lr.cat.norm"]], newdata = test.3)
-auc[["lr.cat.norm"]] <- mlr::performance(yhat[["lr.cat.norm"]], measures = mlr::auc)
-auc
+#modelLib[["lr.cat.norm"]] <- mlr::train(lr.tuning.cat.norm, task = lr.task.cat.norm)
+#yhat[["lr.cat.norm"]] <- predict(modelLib[["lr.cat.norm"]], newdata = test.3)
+#auc[["lr.cat.norm"]] <- mlr::performance(yhat[["lr.cat.norm"]], measures = mlr::auc)
+#auc
 
 # ----------------------- End: Logistic Regression
 
-
-
-
-# ----------------------- Start: Logistic Regression no wrap - normalized
-
-# - Set parameter, task, tune and update learner -
-set.seed(123)
-lr.task.nn <- makeClassifTask(data=nn.train.woe, target="return", positive="1")
-
-parallelStartSocket(3, level = "mlr.tuneParams")
-lr.tuning.nn <- tuneParams(lr, task = lr.task.nn, resampling = rdesc,
-                                 par.set = lr.parms, control = tuneControl, measures = mlr::auc)
-parallelStop()
-lr.tuning.nn$x
-lr.tuning.nn <- setHyperPars(lr, par.vals = lr.tuning.nn$x) # necessary or how is tuned data extracted?
-
-# - Train, predict, AUC -
-modelLib[["lr.nn"]] <- mlr::train(lr.tuning.nn, task = lr.task.nn)
-yhat[["lr.nn"]] <- predict(modelLib[["lr.nn"]], newdata = nn.test.woe)
-auc[["lr.nn"]] <- mlr::performance(yhat[["lr.nn"]], measures = mlr::auc)
-auc
-
-# ----------------------- End: Logistic Regression
 
 
 
@@ -254,7 +232,7 @@ auc
 set.seed(123)
 xgb.parms <- makeParamSet(
   makeIntegerParam("nrounds", lower= 100,upper = 200), 
-  makeDiscreteParam("max_depth", values =c(3,7,12,17,25)), 
+  makeDiscreteParam("max_depth", values =c(3,15,25)), 
   makeNumericParam("eta", lower =0.01, upper= 0.1),
   makeNumericParam("gamma", lower =0.01, upper= 0.1),
   makeNumericParam("colsample_bytree", lower =0.6, upper= 1),
@@ -278,6 +256,21 @@ auc[["xgb"]] <- mlr::performance(yhat[["xgb"]], measures = mlr::auc)
 auc
 
 # ----------------------- End: Extreme Gradient Boosting
+
+
+
+# ----- Save probability predictions
+
+rf.cat.pred <- predict(modelLib[["rf.cat"]], newdata = test.2, type = "prob")
+rf.pred <- predict(modelLib[["rf"]], newdata = test.woe, type = "prob")
+lr.pred <- predict(modelLib[["lr"]], newdata = test.woe, type = "prob")
+lr.cat.pred <- predict(modelLib[["lr.cat"]], newdata = test.2, type = "prob")
+nn.pred <- predict(modelLib[["nn"]], newdata = nn.test.woe, type = "prob")
+xgb.pred <- predict(modelLib[["xgb"]], newdata = test.woe, type = "prob")
+
+rf.cat.pred$data[10,3] # check if this is right column
+test.2[10,c(2,5)]
+
 
 
 # ... Stuff ...

@@ -193,13 +193,13 @@ daten$age[is.na(daten$age)] <- med.age
 
 # ---- Number of items in a basket ----
 daten <- join(daten, dplyr::count(daten, order_date, user_id),
-                         by = c("order_date", "user_id"))
+              by = c("order_date", "user_id"))
 
 
 
 # ---- The number of same items a user bought within the same basket ----
 daten <- join(daten, count(daten, order_date, user_id, item_id),
-                         by = c("order_date", "user_id","item_id"))
+              by = c("order_date", "user_id","item_id"))
 names(daten)[names(daten) == "n"] <- "ct_basket_size"
 names(daten)[names(daten) == "nn"] <- "ct_same_items"
 daten$ct_basket_size <- as.numeric(daten$ct_basket_size)
