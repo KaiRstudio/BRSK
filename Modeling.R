@@ -5,21 +5,13 @@
 # Training/Testing    
 # data splitting, model prediction, cross validation
 
-
-# ----------------------- Read Data Prep
-source("VarSel.R")
-# ----------------------- 
-
-
-
-
 # ----------------------- Packages
 if(!require("NeuralNetTools"))  install.packages("NeuralNetTools"); library("NeuralNetTools")
 if(!require("caret"))           install.packages("caret");          library("caret")
 if(!require("mlr"))             install.packages("mlr");            library("mlr")
-
 if(!require("nnet"))            install.packages("nnet");           library("nnet")
-
+if(!require("glmnet"))          install.packages("glmnet");         library("glmnet")
+if(!require("parallel"))        install.packages("parallel");       library("parallel")
 
 # ----------------------- Structure to save results/tune control
 modelLib <- list()
@@ -267,16 +259,6 @@ lr.pred <- predict(modelLib[["lr"]], newdata = test.woe, type = "prob")
 lr.cat.pred <- predict(modelLib[["lr.cat"]], newdata = test.2, type = "prob")
 nn.pred <- predict(modelLib[["nn"]], newdata = nn.test.woe, type = "prob")
 xgb.pred <- predict(modelLib[["xgb"]], newdata = test.woe, type = "prob")
-
-rf.cat.pred$data[10,3] # check if this is right column
-test.2[10,c(2,5)]
-
-
-rf.cat.pred.class <- factor(rf.cat.pred$data[,3] > 0.5, labels = c(0, 1))
-caret::confusionMatrix(rf.cat.pred.class, test.2$return)
-
-
-
 
 
 # ---------------- Variable Importance

@@ -7,12 +7,36 @@ c<-2.5*-(3+0.1*meanItemPrice)
 d<-0
 
 costs <- matrix(c(a,b,c,d), 2)
+
 colnames(costs) <- rownames(costs) <-levels(daten$return)
 
 #theoretical threshold
 th <- costs[2,1]/(costs[2,1] + costs[1,2])
+
 # ----------------------- end calculation of theoretical threshold
 
+
+# ----------------------- confusion matrices for different thresholds
+
+rf.cat.pred.class <- factor(rf.cat.pred$data[,3] > 0.5, labels = c(0, 1))
+caret::confusionMatrix(rf.cat.pred.class, test.2$return)
+
+rf.pred.class <- factor(rf.pred$data[,3] > 0.5, labels = c(0, 1))
+caret::confusionMatrix(rf.pred.class, test.woe$return)
+
+lr.pred.class <- factor(lr.pred$data[,3] > 0.5, labels = c(0, 1))
+caret::confusionMatrix(lr.pred.class, test.woe$return)
+
+lr.cat.pred.class <- factor(lr.cat.pred$data[,3] > 0.5, labels = c(0, 1))
+caret::confusionMatrix(lr.cat.pred.class, test.2$return)
+
+nn.pred.class <- factor(nn.pred$data[,3] > 0.5, labels = c(0, 1))
+caret::confusionMatrix(nn.pred.class, nn.test.woe$return)
+
+xgb.pred.class <- factor(xgb.pred$data[,3] > 0.5, labels = c(0, 1))
+caret::confusionMatrix(xgb.pred.class, test.woe$return)
+
+# ----------------------- end confusion matrices
 
 # ----------------------- start cost calculations
 
