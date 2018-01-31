@@ -272,7 +272,7 @@ rf.cat.pred$data[10,3] # check if this is right column
 test.2[10,c(2,5)]
 
 
-rf.cat.pred.class <- factor(rf.cat.pred$data[,3] > 0.5, labels = c(0, 1))
+rf.cat.pred.class <- factor(rf.cat.pred$data[,3] > 0.58, labels = c(0, 1))
 caret::confusionMatrix(rf.cat.pred.class, test.2$return)
 
 

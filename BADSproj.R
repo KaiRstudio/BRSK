@@ -36,6 +36,15 @@ if(!require("woeBinning"))    install.packages("woeBinning");   library("woeBinn
 if(!require("klaR"))          install.packages("klaR");         library("klaR")
 
 
+# ----------------------- Packages
+if(!require("NeuralNetTools")) install.packages("NeuralNetTools"); library("NeuralNetTools")
+if(!require("corrplot"))         install.packages("corrplot");        library("corrplot")
+if(!require("glmnet"))         install.packages("glmnet");        library("glmnet")
+if(!require("caret"))         install.packages("caret");        library("caret")
+if(!require("mlr"))         install.packages("mlr");        library("mlr")
+if(!require("parallelMap"))         install.packages("parallelMap");        library("parallelMap")
+# ----------------------- 
+
 
 
 # ----------------------- Load Data
@@ -309,8 +318,8 @@ test.3 <- predict(normalizer, newdata= test.2)
 train.3 <- predict(normalizer, newdata=train.2)
 
 # - Adjust return values for Neural Network
-#nn.train.woe$return <- as.factor(ifelse(nn.train.woe$return == 1, 1, -1))
-#nn.test.woe$return <- as.factor(ifelse(nn.test.woe$return == 1, 1, -1))
+nn.train.woe$return <- as.factor(ifelse(nn.train.woe$return == 1, 1, -1))
+nn.test.woe$return <- as.factor(ifelse(nn.test.woe$return == 1, 1, -1))
 
 # ----------------------- End: Prep Input for NN
 

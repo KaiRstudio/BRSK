@@ -1,26 +1,6 @@
-# file for variable selection
-# we still have to decide which filter we will use 
-# probably IV and caret ?
+# -------------------------------- Variable Selection ----------------------------
+# - Apply Filter (Cramer, Fisher, IV) and Wrapper and exclude not necessary data -
 
-# ----------------------- read pre-processed data
-source("BADSproj.R")
-# ----------------------- 
-
-
-
-# ----------------------- Packages
-if(!require("NeuralNetTools")) install.packages("NeuralNetTools"); library("NeuralNetTools")
-if(!require("corrplot"))         install.packages("corrplot");        library("corrplot")
-if(!require("glmnet"))         install.packages("glmnet");        library("glmnet")
-if(!require("caret"))         install.packages("caret");        library("caret")
-if(!require("mlr"))         install.packages("mlr");        library("mlr")
-if(!require("parallelMap"))         install.packages("parallelMap");        library("parallelMap")
-# ----------------------- 
-
-
-
-# - Apply Filter and Wrapper and exclude not necessary data -
-# Benchmarks: Cramers V < 0.01, Fisher score < 0.015, IV <0.02
 
 
 
@@ -49,7 +29,10 @@ cv.test = function(x,y) {
 
 
 
-# ----------------------- Start: Information Value (IV)
+# ----------------------- Start: Filter
+# - Benchmarks: Cramers V < 0.01, Fisher score < 0.015, IV <0.02 -
+
+# ----------------------- Information Value (IV)
 
 # - WoE only data
 woe.values$IV
@@ -59,7 +42,6 @@ filtered <- names(woe.values$IV[woe.values$IV <0.02])
 woe.values_ids$IV
 
 # ----------------------- End: Information Value (IV)
-
 
 
 
@@ -76,7 +58,6 @@ fisher_scores_2
 
 
 
-
 # ----------------------- Start: Cramer’s V
 # - For categorical variables -
 
@@ -87,7 +68,6 @@ cv.test(train.2$order_month , train.2$return)
 cv.test(train.2$delivery_time , train.2$return)
 
 # ----------------------- End: Cramer's V
-
 
 
 
@@ -107,6 +87,8 @@ nn.test.woe <- nn.test.woe[,names(nn.test.woe) %in% names(test.woe)]
 # - No Drops for other sets -
 # ----------------------- End: Drop not important variables
 
+# ----------------------- End: Filter
+
 
 
 
@@ -121,14 +103,14 @@ lr <- makeLearner("classif.glmnet", predict.type="prob")
 xgb <- makeLearner("classif.xgboost", predict.type="prob")
 parallelStop()
 
-# - Set configuration for models - 
+# - Set tasks for wrapper - 
 task <- makeClassifTask(data=train.woe, target="return", positive="1")
 nn.task <- makeClassifTask(data=nn.train.woe, target="return", positive="1")
 
-# - Use stepwise forward selection -
+# - Stepwise forward selection -
 featureSearchCtrl <- makeFeatSelControlSequential(method="sfs", alpha = 0.01) 
 
-# - Use 5-fold cross validation -
+# - 5-fold cross validation -
 rdesc <- makeResampleDesc(method="CV", iters=5, stratify=TRUE)
 
 # ----------------------- End: Build models
@@ -137,35 +119,41 @@ rdesc <- makeResampleDesc(method="CV", iters=5, stratify=TRUE)
 
 
 # ----------------------- Start: Wrapper
-# - Wrapper for rf, lr, xgb not needed and show less good results -
+# - Wrapper for rf, lr, xgb not necessarily needed and show less good results -
 # - Therefore only neural network wrapper was used for final data - 
+# - Code in regard to rf/lr/xgb wrapper are written as comments - 
 
 set.seed(123)
 parallelStartSocket(3, level = "mlr.selectFeatures")
 # featureSelectionRF <- selectFeatures(rf, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
-featureSelectionNN <- selectFeatures(nn, task=nn.task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
 # featureSelectionLR <- selectFeatures(lr, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
+featureSelectionNN <- selectFeatures(nn, task=nn.task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
 # featureSelectionXGB <- selectFeatures(xgb, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
 parallelStop()
 
+
 # - Show wrapper results -
 # featureSelectionRF # user_id, item_id, delivery_time
-featureSelectionNN # user_id, item_id, delivery_time
 # featureSelectionLR # user_id, item_id
+featureSelectionNN # user_id, item_id, delivery_time
 # featureSelectionXGB
+
 
 # ----------------------- End: Wrapper
 
 
-# ----------------------- Adjust datasets based on wrapper
-# - Since wrapped models have shown less good performance the needed code for wrapped rf/lr/xgb
-# - is written as comment -
+# ----------------------- Start: Exclude not relevant variables
 
+# - RF Wrapper -
 # rf.train.woe <- train.woe[,(names(train.woe) %in% c("return","woe.user_id", "woe.item_id", "woe.delivery_time"))]
 # rf.test.woe <- test.woe[,(names(test.woe) %in% c("return","woe.user_id", "woe.item_id", "woe.delivery_time"))]
 
+# - LR Wrapper -
 # lr.train.woe <- train.woe[,names(train.woe) %in% c("return","woe.user_id", "woe.item_id")]
 # lr.test.woe <- test.woe[,names(test.woe) %in% c("return","woe.user_id", "woe.item_id")]
 
+# - NN Wrapper -
 nn.train.woe <- nn.train.woe[, names(nn.train.woe) %in% c("return","woe.user_id", "woe.item_id")]
 nn.test.woe <- nn.test.woe[, names(nn.train.woe) %in% c("return","woe.user_id", "woe.item_id")]
+
+# ----------------------- End: Exclude not relevant variables
