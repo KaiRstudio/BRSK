@@ -1,7 +1,6 @@
 
-
 # -------------------------------- Data Prep training & test ----------------------------
-
+# - Formatting, handling errors, feature engineering, binning/aggregation, data split, WoE -
 
 
 
@@ -34,7 +33,6 @@ if(!require("neuralnet"))     install.packages("neuralnet");    library("neuraln
 if(!require("woeBinning"))    install.packages("woeBinning");   library("woeBinning")
 if(!require("klaR"))          install.packages("klaR");         library("klaR")
 
-
 # ----------------------- Packages
 if(!require("NeuralNetTools")) install.packages("NeuralNetTools"); library("NeuralNetTools")
 if(!require("glmnet"))         install.packages("glmnet");        library("glmnet")
@@ -50,11 +48,11 @@ if(!require("repmis")) install.packages("repmis");library("repmis")
 
 
 
+
 # ----------------------- Load Data
 
 githubURL <- "https://raw.githubusercontent.com/KaiRstudio/BRSK/master/BADS_WS1718_known_MODEL_FITTING.csv"
 daten <- source_data(githubURL, sha1 ="254e37cf5b7fe121e2e9c8212803cda9415c9de7", header = "auto", sep=",")
-#sha1 is the hash to make sure data hasnt changed
 
 
 
@@ -79,7 +77,7 @@ daten$return        <- as.factor(daten$return)
 
 # ----------------------- General Terms
 
-# - Calculate age -
+# ---- Calculate age ----
 age <- function(from, to) {
   from_lt = as.POSIXlt(from)
   to_lt = as.POSIXlt(to)
@@ -91,7 +89,7 @@ age <- function(from, to) {
     age)} ## why not just use difference between order date and yob?
 
 
-# - Exclude Outlier by Z-Score -
+# ---- Exclude Outlier by Z-Score ----
 Z.outlier <- function(x){
   Zscore <- scale(x)
   x[Zscore >3] <- NA
@@ -99,16 +97,7 @@ Z.outlier <- function(x){
   return(x)}
 
 
-#-Duplicated rows
-# count.duplicates <- function(DF){
-#   x <- do.call('paste', c(DF, sep = '\r'))
-#   ox <- order(x)
-#   rl <- rle(x[ox])
-#   cbind(DF[ox[cumsum(rl$lengths)],,drop=FALSE],count = rl$lengths)
-#   
-# }
-
-# - Aggregate color levels -
+# ---- Aggregate color levels ----
 agg.col <- function (df.col) {
   df.col <- factor(df.col)
   df.col <- ifelse(df.col %in% c("?"), "Other",
@@ -130,10 +119,6 @@ daten$delivery_date[daten$order_date>daten$delivery_date] <-NA
 
 
 
-# ---- Item ID ----
-
-
-
 # ---- Size ----
 daten$item_size <- factor(toupper(daten$item_size))
 levels(daten$item_size) <- c(levels(daten$item_size), "Other")
@@ -149,23 +134,10 @@ daten$item_color <- agg.col(daten$item_color)
 
 
 
-# ---- Brand ID ----
-
-
-
 # ---- Price ----
 daten$item_price[daten$item_price <= 0] <- NA
 med_item_price <- median(daten$item_price, na.rm=TRUE)
 daten$item_price[is.na(daten$item_price)] <- med_item_price
-
-# - Scale Price -
-#daten$item_price2 <- as.numeric(scale(daten$item_price))
-#daten$item_price <- Z.outlier(daten$item_price) #Are we sure that 399.95 is outlier?
-
-
-
-# ---- User ID ----
-
 
 
 
@@ -174,25 +146,23 @@ levels(daten$user_title) <- c(levels(factor(daten$user_title)),"Other")
 daten$user_title[daten$user_title != "Mrs" & daten$user_title != "Mr"] <- factor("Other")
 daten$user_title <- factor(daten$user_title)
 
-
-
-# ---- User State ----
-
-# ----------------------- End: Existing variable prep
+# ----------------------- End: Prep existing variables
 
 
 
 
 # ----------------------- Start: New variables
 
-# ---- Date dependent variables ----
-daten$order_month <- as.factor(months(daten$order_date)) # new column with month of delivery
-daten$delivery_time <- Z.outlier(as.numeric(daten$delivery_date - daten$order_date))
-daten$regorderdiff <- as.numeric(daten$order_date - daten$user_reg_date)
-# If necessary replace NAs by median
-#MED_DEL <- round( median (daten$delivery_time, na.rm =TRUE)) gives median of 4 and mean of 11 for delivery time
-#daten$delivery_time[is.na(daten$delivery_time)] <- MED_DEL
+# ---- Month of order ----
+daten$order_month <- as.factor(months(daten$order_date))
 
+
+# ---- Days needed to deliver ----
+daten$delivery_time <- Z.outlier(as.numeric(daten$delivery_date - daten$order_date))
+
+
+# ---- Duration of membership ----
+daten$regorderdiff <- as.numeric(daten$order_date - daten$user_reg_date)
 
 
 # ---- Customer age ----
@@ -202,14 +172,12 @@ med.age <- median(daten$age, na.rm = TRUE)
 daten$age[is.na(daten$age)] <- med.age
 
 
-
 # ---- Number of items in a basket ----
 daten <- join(daten, dplyr::count(daten, order_date, user_id),
               by = c("order_date", "user_id"))
 
 
-
-# ---- The number of same items a user bought within the same basket ----
+# ---- Number of same items bought in the same basket ----
 daten <- join(daten, count(daten, order_date, user_id, item_id),
               by = c("order_date", "user_id","item_id"))
 names(daten)[names(daten) == "n"] <- "ct_basket_size"
@@ -217,9 +185,9 @@ names(daten)[names(daten) == "nn"] <- "ct_same_items"
 daten$ct_basket_size <- as.numeric(daten$ct_basket_size)
 daten$ct_same_items <- as.numeric(daten$ct_same_items)
 
-
-
 # ----------------------- End new variables
+
+
 
 
 # ----------------------- Start: Drop non relevant variables
@@ -238,25 +206,27 @@ daten <- daten[,!(names(daten) %in% drops)]
 
 # ----------------------- Start: Binning
 
+# ---- Significant: delivery_time ----
 binning <- woe.binning (df=daten, target.var="return", pred.var=c("delivery_time"), min.perc.class = 0.01)
 #woe.binning.plot(binning)
 daten$delivery_time <- ifelse(is.na(daten$delivery_time), "Missing",
                               ifelse(daten$delivery_time <= 1, "<=1", ">1"))
 daten$delivery_time <- factor(daten$delivery_time)
-# - Only significant: delivery_time -
 
 # ----------------------- End: Binning
 
 
 
+
 # ----------------------- Start: Split Data
-# to avoid overfitting: split a woe training set from the overall training set
+
+# ---- Training & Test ----
 set.seed(123)
 idx.train <- createDataPartition(y = daten$return, p = 0.75, list = FALSE) # Draw a random, stratified sample including p percent of the data
 test <-  daten[-idx.train, ] # test set
 train <- daten[idx.train, ] # training set
 
-# - Extra Split for WoE -
+# ---- To avoid overfitting: further data split for WoE ----
 woe.idx.train <- createDataPartition(y=train$return, p = 0.7, list = FALSE) # 0.7 just choosen randomly at the moment
 train.split <- train[woe.idx.train,] # Set for WoE calculation
 
@@ -265,85 +235,43 @@ train.split <- train[woe.idx.train,] # Set for WoE calculation
 
 
 
-# ----------> should the data be splitted before? (see row 257)
-
-
-
-
 # ----------------------- Start: WoE
-# Probably it makes sense to apply WoE only to variables with many factors
-#tapply(train$item_id, train$return, summary)
-#tapply(train$item_size, train$return, summary)
-#tapply(train$item_color, train$return, summary)
-#tapply(train$brand_id, train$return, summary)
-#tapply(train$item_price, train$return, summary)
-#tapply(train$user_id, train$return, summary)
-#tapply(train$user_title, train$return, summary)
-#tapply(train$user_state, train$return, summary)
-#tapply(train$order_month, train$return, summary)
-#tapply(train$delivery_time, train$return, summary)
-#tapply(train$regorderdiff, train$return, summary)
-#tapply(train$age, train$return, summary)
-#tapply(train$user_title, train$return, summary)
-#tapply(train$ct_basket_size, train$return, summary)
-#tapply(train$ct_same_items, train$return, summary)
+
+# ---- WoE for all variables ----
 woe.values <- woe(return ~ ., data=train.split, zeroadj=0.05)
+
+# ---- WoE only for variables with many factors (all IDs) ----
 woe.values_ids <- woe(return ~ item_id+brand_id+user_id+item_size, data=train.split, zeroadj=0.05)
 # - note: klaR assumes the first level of target to be the target level (WoE refer to no returns)
 
-## - check for plausibility by plotting weights against their levels
-# *-1 because woe predicts how probable 0 appears, not how probable 1 is
 #barplot(-1*woe.values$woe$user_state)
 
-# - Replacement all WoE
+# ---- WoE replacement: All categoricals ----
 test.woe <- predict(woe.values, newdata=test, replace=TRUE)
 train.woe <- predict(woe.values, newdata=train, replace=TRUE)
 
-# - Replacement only Id-WoE data set
+# ---- WoE replacement: IDs only ----
 test.2 <-predict(woe.values_ids, newdata=test, replace=TRUE)
 train.2 <-predict(woe.values_ids, newdata=train, replace=TRUE)
-
-# - Check if data was replaced correctly (because of that -1 shit thing)
 
 # ----------------------- End: WoE
 
 
 
 
-# ----------------------- Start: Prep Input for NN
-# Be careful to use the training mean/sd for normalization
-normalizer <- caret::preProcess(train.woe[,names(train.woe) %in% c("item_price","regorderdiff","age","ct_basket_size","ct_same_items")],
+# ----------------------- Start: Normalized data
+normalizer <- caret::preProcess(train[,names(train) %in% c("item_price","regorderdiff","age","ct_basket_size","ct_same_items")],
                                 method = c("center", "scale"))
+
+# ---- Normalized dataset for neural network ----
 nn.train.woe <- predict(normalizer, newdata = train.woe)
 nn.test.woe <- predict(normalizer, newdata = test.woe)
-
-test.3 <- predict(normalizer, newdata= test.2)
-train.3 <- predict(normalizer, newdata=train.2)
-
-# - Adjust return values for Neural Network
+# ---- Adjust return values for Neural Network ----
 nn.train.woe$return <- as.factor(ifelse(nn.train.woe$return == 1, 1, -1))
 nn.test.woe$return <- as.factor(ifelse(nn.test.woe$return == 1, 1, -1))
 
-# ----------------------- End: Prep Input for NN
+# ---- Normalized dataset with categorical variables ----
+test.3 <- predict(normalizer, newdata= test.2)
+train.3 <- predict(normalizer, newdata=train.2)
 
-
-
-
-#missmap(daten, main = "Missing values vs observed") # to give a plot of the missing values per variable
-
-# ---- IDEAS & OPEN QUESTIONS ----
-
-#    I If a nominal or ordinal column in the test data set contains more levels than the corresponding column in the training data set, you can add levels to the column in the training data set manually using the following command:
-#     training_data$salutation = factor(training_data$salutation, levels=c(levels(training_data$salutation), "Family"))
-#   II Weekday?
-#  IV Order nominal factors to receive ordinal?
-
-# 1)  In case someone buys more stuff at once, the whole thing should obviously not be 
-#     discouraged because one or two items are likely to be returned
-#     rather try to get the one item out of the cart
-# 2)  The likelihood of an item being returned has to be seen in respect to how much
-#     would be lost if discouraged and wouldnt have been returned. It is worse if cheap items
-#     are returned than expensive ones, because percentage wise the return is more expensive
-#     as well as its 3€ plus 10 % ov value.
-# 4)  likelihood ratio test; AIC; step function (direction: both)
-# 7)  review at the end which packages we really need
+# ----------------------- End: Normalized data

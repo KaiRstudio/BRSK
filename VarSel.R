@@ -1,3 +1,4 @@
+
 # -------------------------------- Variable Selection ----------------------------
 # - Apply Filter (Cramer, Fisher, IV) and Wrapper and exclude not necessary data -
 
@@ -153,7 +154,7 @@ featureSelectionNN # user_id, item_id, delivery_time
 # lr.test.woe <- test.woe[,names(test.woe) %in% c("return","woe.user_id", "woe.item_id")]
 
 # - NN Wrapper -
-nn.train.woe <- nn.train.woe[, names(nn.train.woe) %in% c("return","woe.user_id", "woe.item_id")]
-nn.test.woe <- nn.test.woe[, names(nn.train.woe) %in% c("return","woe.user_id", "woe.item_id")]
+nn.train.woe <- nn.train.woe[, names(nn.train.woe) %in% c("return","woe.user_id", "woe.item_id","delivery_time")]
+nn.test.woe <- nn.test.woe[, names(nn.train.woe) %in% c("return","woe.user_id", "woe.item_id","delivery_time")]
 
 # ----------------------- End: Exclude not relevant variables

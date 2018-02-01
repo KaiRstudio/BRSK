@@ -1,5 +1,6 @@
 
-
+# -------------------------------- Parameter Tuning and Performance ----------------------------
+# - 
 
 # ----------------------- Structure to save results/tune control
 modelLib <- list()
@@ -186,7 +187,8 @@ set.seed(123)
 nn.task <- makeClassifTask(data=nn.train.woe, target="return", positive="1")
 nn.parms <- makeParamSet(
   makeNumericParam("decay", lower = -8, upper = 0, trafo = function(x) 10^(0.5*x)), 
-  makeDiscreteParam("size", values = c(1,2,4,8,16))) 
+  makeDiscreteParam("size", values = c(1,2,4,8,16)),
+  makeIntegerParam("maxit", lower= 80, upper = 160, trafo = function (x) 5*x)) # 400-800 by 5
 # number of neurons in the hidden layer  
 # decay from 0.0001 to 1
 parallelStartSocket(3)
