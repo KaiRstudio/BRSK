@@ -46,16 +46,12 @@ abcdefg <- function(rf, test, item_price, x){
   all_cost <- numeric()
   for (i in seq_along(x)){
     all_cost[i] <- (2.5*sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<x[i] & test.2$return==1]))+0.5*sum(test.2$item_price[rf.cat.pred$data[,3]>x[i] & test.2$return==0]));
-    print(paste(x[i], " - ", all_cost[i]))
   }
   opt_cutoff <- x[which.min(all_cost)]
   return (opt_cutoff)
     }
-xxx <- seq(from =0.1,to= 0.9, by = 0.1)
-
-
-  print(abcdefg(rf, test, item_price, xxx))
-
+xxx <- seq(from =0.6109,to= 0.6111, by = 0.000001)
+optimal.threshold1 <- abcdefg(rf, test, item_price, xxx)
 
 
 # costs as sum of item prices within test sample, where |no warning| is given but item is |returned|
