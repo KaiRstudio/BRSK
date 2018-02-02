@@ -176,9 +176,7 @@ falsely.warned9 <- sum(nn.test.woe$item_price[nn.pred$data[,3]>th & nn.test.woe$
 falsely.warned10 <- sum(nn.test.woe$item_price[nn.pred$data[,3]>0.5 & nn.test.woe$return==0]) # naive threshold
 
 exp.costs9 <- (2.5*falsely.not.warned9 + 0.5*falsely.warned9)
-exp.costs9 # costs for th
 exp.costs10 <- (2.5*falsely.not.warned10 + 0.5*falsely.warned10)
-exp.costs10 # costs for naive
 
 # ---------------------------------------------------------------------
 
@@ -191,9 +189,7 @@ falsely.warned11 <- sum(test.woe$item_price[xgb.pred$data[,3]>th & test.woe$retu
 falsely.warned12 <- sum(test.woe$item_price[xgb.pred$data[,3]>0.5 & test.woe$return==0]) # naive threshold
 
 exp.costs11 <- (2.5*falsely.not.warned11 + 0.5*falsely.warned11)
-exp.costs11 # costs for th
 exp.costs12 <- (2.5*falsely.not.warned12 + 0.5*falsely.warned12)
-exp.costs12 # costs for naive
 
 # ----------------------- end cost calculations
 

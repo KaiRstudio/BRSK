@@ -17,7 +17,6 @@ nd$brand_id      <- as.factor(nd$brand_id)
 nd$user_id       <- as.factor(nd$user_id)
 nd$user_title    <- as.factor(nd$user_title)
 nd$user_state    <- as.factor(nd$user_state)
-nd$return        <- as.factor(nd$return)
 
 
 
