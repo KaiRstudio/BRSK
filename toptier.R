@@ -1,4 +1,4 @@
-# --------------  BADS Final Assignment Group 44 -------------
+# --------------  BADS Final Assignment Group 45 -------------
 
 #   - Sebastian Gütgemann (589623)  ~ s.guetgemann@gmx.net
 #   - Rieke Ackermann     (588611)  ~ rieke.ackermann@web.de
