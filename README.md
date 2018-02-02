@@ -3,10 +3,10 @@
 Humboldt University of Berlin | Business Analytics and Data Science | Group 45
 
 by:
-Sebastian Gütgemann (589623)  ~ s.guetgemann@gmx.net
-Rieke Ackermann     (588611)  ~ rieke.ackermann@web.de
-Sena Aydin          (594644)  ~ senaaydin484@gmail.com
-Kai Dessau          (559766)  ~ kai-dessau@web.de
+    Sebastian Gütgemann (589623)  ~ s.guetgemann@gmx.net
+    Rieke Ackermann     (588611)  ~ rieke.ackermann@web.de
+    Sena Aydin          (594644)  ~ senaaydin484@gmail.com
+    Kai Dessau          (559766)  ~ kai-dessau@web.de
 
 To run the code, please use the "toptier" file.
 
