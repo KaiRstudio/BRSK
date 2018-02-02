@@ -1,16 +1,29 @@
 
 # -------------------------------- Parameter Tuning and Performance ----------------------------
-# - 
+# - Tune parameter based on literature, AUC performance -
 
-# ----------------------- Structure to save results/tune control
+# *** Some data show less good performance for some modells and are written as comments in the following code ***
+# *** This includes the complete WoE dataset for Random Forest and normalized data for all models except nn ***
+# ----------------------- Structure to save results
 modelLib <- list()
 yhat <- list()
 auc <- list()
 
+
+
+
+# ----------------------- Set cross validation, control grid and tasks
 tuneControl <- makeTuneControlGrid(resolution = 3, tune.threshold = FALSE)
 # - Define resampling procedure (here: 5-fold cross validation) -
 rdesc <- makeResampleDesc(method="CV", iters=5, stratify=TRUE)
+
+# ---- Tasks for each dataset ----
 task <- makeClassifTask(data=train.woe, target="return", positive="1")
+# - rf.task <- makeClassifTask(data=rf.train.woe, target="return", positive="1")
+rf.task2 <- makeClassifTask(data=train.2, target="return", positive="1")
+nn.task <- makeClassifTask(data=nn.train.woe, target="return", positive="1")
+# - lr.task.cat.norm <- makeClassifTask(data=train.3, target="return", positive="1")
+lr.task.cat <- makeClassifTask(data=train.2, target="return", positive="1")
 
 # ----------------------- 
 
@@ -25,7 +38,7 @@ task <- makeClassifTask(data=train.woe, target="return", positive="1")
 # ---------------------------- Don't use because less good -----
 # - Set parameter, task, tune and update learner -
 #set.seed(123)
-#rf.task <- makeClassifTask(data=rf.train.woe, target="return", positive="1")
+
 #mtry.rfw.set <- sqrt(ncol(rf.train.woe))*c(0.1,0.25,0.5,1,2,4) # c(0,1,2,4,8)
 #rfw.parms <- makeParamSet(
 # The recommendation for mtry by Breiman is squareroot number of columns
@@ -85,7 +98,6 @@ auc
 
 # - Set parameter, task, tune and update learner -
 set.seed(123)
-rf.task2 <- makeClassifTask(data=train.2, target="return", positive="1")
 
 parallelStartSocket(3, level = "mlr.tuneParams")
 rf.tuning.cat <- tuneParams(rf, task = rf.task2, resampling = rdesc,
@@ -110,7 +122,7 @@ auc
 # - Set parameter, task, tune and update learner -
 set.seed(123)
 lr.parms <- makeParamSet(
-  makeNumericParam("s", lower = 0.001, upper =1), 
+  makeDiscreteParam("s", values = c(0.001, 0.01, 0.1, 0.5,1)), 
   makeDiscreteParam("alpha", value = 1)
 ) 
 parallelStartSocket(3, level = "mlr.tuneParams")
@@ -134,7 +146,6 @@ auc
 
 # - Set parameter, task, tune and update learner -
 set.seed(123)
-lr.task.cat <- makeClassifTask(data=train.2, target="return", positive="1")
 
 parallelStartSocket(3, level = "mlr.tuneParams")
 lr.tuning.cat <- tuneParams(lr, task = lr.task.cat, resampling = rdesc,
@@ -160,7 +171,6 @@ auc
 
 # - Set parameter, task, tune and update learner -
 #set.seed(123)
-#lr.task.cat.norm <- makeClassifTask(data=train.3, target="return", positive="1")
 
 #parallelStartSocket(3, level = "mlr.tuneParams")
 #lr.tuning.cat.norm <- tuneParams(lr, task = lr.task.cat.norm, resampling = rdesc,
@@ -184,11 +194,10 @@ auc
 
 # - Set parameter, task, tune and update learner -
 set.seed(123)
-nn.task <- makeClassifTask(data=nn.train.woe, target="return", positive="1")
 nn.parms <- makeParamSet(
-  makeNumericParam("decay", lower = -8, upper = 0, trafo = function(x) 10^(0.5*x)), 
-  makeDiscreteParam("size", values = c(1,2,4,8,16)),
-  makeIntegerParam("maxit", lower= 80, upper = 160, trafo = function (x) 5*x)) # 400-800 by 5
+  makeDiscreteParam("decay", values = c(0.0001, 0.001, 0.01, 0.1, 1)), 
+  makeDiscreteParam("size", values = c(1,4,8,16)),
+  makeDiscreteParam("maxit", values = c(400, 600, 800)))
 # number of neurons in the hidden layer  
 # decay from 0.0001 to 1
 parallelStartSocket(3)
@@ -213,13 +222,13 @@ auc
 # - Set parameter, task, tune and update learner -
 set.seed(123)
 xgb.parms <- makeParamSet(
-  makeIntegerParam("nrounds", lower= 100,upper = 200), 
+  makeDiscreteParam("nrounds", values = c(100,125,150)), 
   makeDiscreteParam("max_depth", values =c(3,15,25)), 
-  makeNumericParam("eta", lower =0.01, upper= 0.1),
-  makeNumericParam("gamma", lower =0.01, upper= 0.1),
-  makeNumericParam("colsample_bytree", lower =0.6, upper= 1),
-  makeIntegerParam("min_child_weight",lower = 1, upper = 7),
-  makeNumericParam("subsample", lower =0.6, upper= 1)
+  makeDiscreteParam("eta", values = c(0.01,0.05,0.1)),
+  makeDiscreteParam("gamma", values = c(0.01,0.05,0.1)),
+  makeDiscreteParam("colsample_bytree", values = c(0.75,1)),
+  makeDiscreteParam("min_child_weight",vales = c(1,4,7)),
+  makeDiscreteParam("subsample", values = c(0.75,1))
 )
 # choose lambda and alpha randomly - how?
 # currently default: lambda = 1, alpha= 0
