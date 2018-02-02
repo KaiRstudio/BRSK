@@ -145,6 +145,6 @@ exp.costs12 # costs for naive
 # ----------------------- end cost calculations
 
 naive.th <- c(exp.costs2,exp.costs4,exp.costs6,exp.costs8,exp.costs10)
-theoretical.th <- c(exp.costs,exp.costs3,exp.costs5,exp.costs7,exp.costs9)
+theoretical.th <- c(exp.costs1,exp.costs3,exp.costs5,exp.costs7,exp.costs9)
 naming <- c("rf.cat", "rf", "lr", "lr.cat" , "nn")
 cost.matrix <- data.frame(naive.th,theoretical.th, row.names = naming)
