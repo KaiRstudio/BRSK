@@ -40,6 +40,24 @@ caret::confusionMatrix(xgb.pred.class, test.woe$return)
 
 # ----------------------- end confusion matrices
 
+# Cross validation
+xxx <- seq(from =0.1,to= 0.9, by = 0.001)
+
+k <- 10
+folds <- cut(1:nrow(test.2), breaks = k, labels = FALSE)
+set.seed(123)
+folds <- sample(folds)
+cv_results <- matrix(nrow = 1, ncol = k)
+for (j in 1:k) {
+  idx_val <- which(folds == j, arr.ind = TRUE)
+  cv_train <- test.2[-idx_val,]
+  cv_val <- test.2[idx_val,]
+  for(i in 1){
+    cv_results[i,j] <- abcdefg(rf, test, item_price, xxx)
+  }
+}
+opt.cross.val.th1 <- mean(cv_results)
+
 # ----------------------- start cost calculations
 
 # calculate empirical cost-dependent threshold
