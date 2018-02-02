@@ -40,7 +40,21 @@ caret::confusionMatrix(xgb.pred.class, test.woe$return)
 
 # ----------------------- end confusion matrices
 
-# Cross validation
+
+
+# ----------------------- start cost calculations
+
+# calculate empirical cost-dependent threshold
+abcdefg <- function(rf, test, item_price, x){
+  all_cost <- numeric()
+  for (i in seq_along(x)){
+    all_cost[i] <- (2.5*sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<x[i] & test.2$return==1]))+0.5*sum(test.2$item_price[rf.cat.pred$data[,3]>x[i] & test.2$return==0]));
+  }
+  opt_cutoff <- x[which.min(all_cost)]
+  return (opt_cutoff)
+    }
+
+# Cross validated calculation of optimal, empirical threshold
 xxx <- seq(from =0.1,to= 0.9, by = 0.001)
 
 k <- 10
@@ -56,30 +70,15 @@ for (j in 1:k) {
 }
 opt.cross.val.th1 <- mean(cv_results)
 
-# ----------------------- start cost calculations
-
-# calculate empirical cost-dependent threshold
-abcdefg <- function(rf, test, item_price, x){
-  all_cost <- numeric()
-  for (i in seq_along(x)){
-    all_cost[i] <- (2.5*sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<x[i] & test.2$return==1]))+0.5*sum(test.2$item_price[rf.cat.pred$data[,3]>x[i] & test.2$return==0]));
-  }
-  opt_cutoff <- x[which.min(all_cost)]
-  return (opt_cutoff)
-    }
-xxx <- seq(from =0.6109,to= 0.6111, by = 0.000001)
-optimal.threshold1 <- abcdefg(rf, test, item_price, xxx)
-
-
 # costs as sum of item prices within test sample, where |no warning| is given but item is |returned|
 falsely.not.warned1 <- sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<th & test.2$return==1])) # theoretical threshold
 falsely.not.warned2 <- sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<0.5 & test.2$return==1])) # naive threshold
-falsely.not.warned.opt1 <- sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<optimal.threshold1 & test.2$return==1])) # naive threshold
+falsely.not.warned.opt1 <- sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<opt.cross.val.th1 & test.2$return==1])) # naive threshold
 
 # costs as sum of item prices within test sample, where |warning| was given although item would have been |kept|
 falsely.warned1 <- sum(test.2$item_price[rf.cat.pred$data[,3]>th & test.2$return==0]) # theoretical threshold
 falsely.warned2 <- sum(test.2$item_price[rf.cat.pred$data[,3]>0.5 & test.2$return==0]) # naive threshold
-falsely.warned.opt2 <- sum(test.2$item_price[rf.cat.pred$data[,3]>optimal.threshold1 & test.2$return==0]) # empirical threshold
+falsely.warned.opt2 <- sum(test.2$item_price[rf.cat.pred$data[,3]>opt.cross.val.th1 & test.2$return==0]) # empirical threshold
 
 exp.costs1 <- (2.5*falsely.not.warned1 + 0.5*falsely.warned1)
 exp.costs2 <- (2.5*falsely.not.warned2 + 0.5*falsely.warned2)
@@ -96,18 +95,32 @@ abcdefg2 <- function(rf, test, item_price, x){
   opt_cutoff <- x[which.min(all_cost)]
   return (opt_cutoff)
 }
-xxx2 <- seq(from =0.6,to= 0.65, by = 0.0001)
-optimal.threshold2 <- abcdefg2(rf, test, item_price, xxx2)
+
+# Cross validated calculation of optimal, empirical threshold
+xxx <- seq(from =0.1,to= 0.9, by = 0.001)
+
+k <- 10
+folds <- cut(1:nrow(test.woe), breaks = k, labels = FALSE)
+set.seed(123)
+folds <- sample(folds)
+cv_results2 <- matrix(nrow = 1, ncol = k)
+for (j in 1:k) {
+  idx_val <- which(folds == j, arr.ind = TRUE)
+  cv_train <- test.woe[-idx_val,]
+  cv_val <- test.woe[idx_val,]
+  cv_results2[1,j] <- abcdefg2(rf, test, item_price, xxx)
+}
+opt.cross.val.th2 <- mean(cv_results2)
 
 # costs as sum of item prices within test sample, where |no warning| is given but item is |returned|
 falsely.not.warned3 <- sum(3+0.1*(test.woe$item_price[rf.pred$data[,3]<th & test.woe$return==1])) # theoretical threshold
 falsely.not.warned4 <- sum(3+0.1*(test.woe$item_price[rf.pred$data[,3]<0.5 & test.woe$return==1])) # naive threshold
-falsely.not.warned.opt3 <- sum(3+0.1*(test.woe$item_price[rf.pred$data[,3]<optimal.threshold2 & test.woe$return==1])) # empirical threshold
+falsely.not.warned.opt3 <- sum(3+0.1*(test.woe$item_price[rf.pred$data[,3]<opt.cross.val.th2 & test.woe$return==1])) # empirical threshold
 
 # costs as sum of item prices within test sample, where |warning| was given although item would have been |kept|
 falsely.warned3 <- sum(test.woe$item_price[rf.pred$data[,3]>th & test.woe$return==0]) # theoretical threshold
 falsely.warned4 <- sum(test.woe$item_price[rf.pred$data[,3]>0.5 & test.woe$return==0]) # naive threshold
-falsely.warned.opt3 <- sum(test.woe$item_price[rf.pred$data[,3]>optimal.threshold2 & test.woe$return==0]) # naive threshold
+falsely.warned.opt3 <- sum(test.woe$item_price[rf.pred$data[,3]>opt.cross.val.th2 & test.woe$return==0]) # naive threshold
 
 exp.costs3 <- (2.5*falsely.not.warned3 + 0.5*falsely.warned3)
 exp.costs4 <- (2.5*falsely.not.warned4 + 0.5*falsely.warned4)
@@ -124,18 +137,32 @@ abcdefg3 <- function(lr, test, item_price, x){
   opt_cutoff <- x[which.min(all_cost)]
   return (opt_cutoff)
 }
-xxx3 <- seq(from =0.6,to= 0.62, by = 0.00001)
-optimal.threshold3 <- abcdefg3(lr, test, item_price, xxx3)
+
+# Cross validated calculation of optimal, empirical threshold
+xxx <- seq(from =0.1,to= 0.9, by = 0.001)
+
+k <- 10
+folds <- cut(1:nrow(test.woe), breaks = k, labels = FALSE)
+set.seed(123)
+folds <- sample(folds)
+cv_results3 <- matrix(nrow = 1, ncol = k)
+for (j in 1:k) {
+  idx_val <- which(folds == j, arr.ind = TRUE)
+  cv_train <- test.woe[-idx_val,]
+  cv_val <- test.woe[idx_val,]
+  cv_results3[1,j] <- abcdefg3(lr, test, item_price, xxx)
+}
+opt.cross.val.th3 <- mean(cv_results3)
 
 # costs as sum of item prices within test sample, where |no warning| is given but item is |returned|
 falsely.not.warned5 <- sum(3+0.1*(test.woe$item_price[lr.pred$data[,3]<th & test.woe$return==1])) # theoretical threshold
 falsely.not.warned6 <- sum(3+0.1*(test.woe$item_price[lr.pred$data[,3]<0.5 & test.woe$return==1])) # naive threshold
-falsely.not.warned.opt5 <- sum(3+0.1*(test.woe$item_price[lr.pred$data[,3]<optimal.threshold3 & test.woe$return==1])) # empirical threshold
+falsely.not.warned.opt5 <- sum(3+0.1*(test.woe$item_price[lr.pred$data[,3]<opt.cross.val.th3 & test.woe$return==1])) # empirical threshold
 
 # costs as sum of item prices within test sample, where |warning| was given although item would have been |kept|
 falsely.warned5 <- sum(test.woe$item_price[lr.pred$data[,3]>th & test.woe$return==0]) # theoretical threshold
 falsely.warned6 <- sum(test.woe$item_price[lr.pred$data[,3]>0.5 & test.woe$return==0]) # naive threshold
-falsely.warned.opt3 <- sum(test.woe$item_price[lr.pred$data[,3]>optimal.threshold3 & test.woe$return==0]) # empirical threshold
+falsely.warned.opt3 <- sum(test.woe$item_price[lr.pred$data[,3]>opt.cross.val.th3 & test.woe$return==0]) # empirical threshold
 
 exp.costs5 <- (2.5*falsely.not.warned5 + 0.5*falsely.warned5)
 exp.costs6 <- (2.5*falsely.not.warned6 + 0.5*falsely.warned6)
