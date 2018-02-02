@@ -55,15 +55,15 @@ optimal.threshold1 <- abcdefg(rf, test, item_price, xxx)
 
 
 # costs as sum of item prices within test sample, where |no warning| is given but item is |returned|
-falsely.not.warned <- sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<th & test.2$return==1])) # theoretical threshold
+falsely.not.warned1 <- sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<th & test.2$return==1])) # theoretical threshold
 falsely.not.warned2 <- sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<0.5 & test.2$return==1])) # naive threshold
 
 # costs as sum of item prices within test sample, where |warning| was given although item would have been |kept|
-falsely.warned <- sum(test.2$item_price[rf.cat.pred$data[,3]>th & test.2$return==0]) # theoretical threshold
+falsely.warned1 <- sum(test.2$item_price[rf.cat.pred$data[,3]>th & test.2$return==0]) # theoretical threshold
 falsely.warned2 <- sum(test.2$item_price[rf.cat.pred$data[,3]>0.5 & test.2$return==0]) # naive threshold
 
-exp.costs <- (2.5*falsely.not.warned + 0.5*falsely.warned)
-exp.costs # costs for th
+exp.costs1 <- (2.5*falsely.not.warned1 + 0.5*falsely.warned1)
+exp.costs1 # costs for th
 exp.costs2 <- (2.5*falsely.not.warned2 + 0.5*falsely.warned2)
 exp.costs2 # costs for naive
 
@@ -143,3 +143,8 @@ exp.costs12 <- (2.5*falsely.not.warned12 + 0.5*falsely.warned12)
 exp.costs12 # costs for naive
 
 # ----------------------- end cost calculations
+
+naive.th <- c(exp.costs2,exp.costs4,exp.costs6,exp.costs8,exp.costs10)
+theoretical.th <- c(exp.costs,exp.costs3,exp.costs5,exp.costs7,exp.costs9)
+naming <- c("rf.cat", "rf", "lr", "lr.cat" , "nn")
+cost.matrix <- data.frame(naive.th,theoretical.th, row.names = naming)
