@@ -52,9 +52,7 @@ for (j in 1:k) {
   idx_val <- which(folds == j, arr.ind = TRUE)
   cv_train <- test.2[-idx_val,]
   cv_val <- test.2[idx_val,]
-  for(i in 1){
-    cv_results[i,j] <- abcdefg(rf, test, item_price, xxx)
-  }
+  cv_results[1,j] <- abcdefg(rf, test, item_price, xxx)
 }
 opt.cross.val.th1 <- mean(cv_results)
 
