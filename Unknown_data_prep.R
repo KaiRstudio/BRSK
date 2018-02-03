@@ -19,7 +19,6 @@ nd$user_title    <- as.factor(nd$user_title)
 nd$user_state    <- as.factor(nd$user_state)
 
 
-
 # ----------------------- Start: Prep Variables
 
 # ---- Check whether IDs are known to dataset ----

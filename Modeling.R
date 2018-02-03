@@ -49,7 +49,7 @@ lr.task.cat <- makeClassifTask(data=train.2, target="return", positive="1")
 # mtry from half of squaretoot to 2 times squareroot
 # number of bagging iterations 5, 10, 15, 20, 25
 # number of trees 100, 200, 
-#parallelStartSocket(3, level = "mlr.tuneParams")
+#parallelStartSocket(cores, level = "mlr.tuneParams")
 #rfw.tuning <- tuneParams(rf, task = rf.task, resampling = rdesc,
 #                        par.set = rfw.parms, control = tuneControl, measures = mlr::auc)
 #parallelStop()
@@ -76,7 +76,7 @@ rf.parms <- makeParamSet(
   makeDiscreteParam("mtry", values= c(1,2,3,7)), 
   makeDiscreteParam("ntree", values = c(500, 750, 1000 ))
 ) 
-parallelStartSocket(3, level = "mlr.tuneParams")
+parallelStartSocket(cores, level = "mlr.tuneParams")
 rf.tuning <- tuneParams(rf, task = task, resampling = rdesc,
                         par.set = rf.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
@@ -100,7 +100,7 @@ auc
 set.seed(133)
 
 rf.tuneControl <-  makeTuneControlGrid(resolution = 4, tune.threshold = FALSE)
-parallelStartSocket(3, level = "mlr.tuneParams")
+parallelStartSocket(cores, level = "mlr.tuneParams")
 rf.tuning.cat <- tuneParams(rf, task = rf.task2, resampling = rdesc,
                             par.set = rf.parms, control = rf.tuneControl, measures = mlr::auc)
 parallelStop()
@@ -126,7 +126,7 @@ lr.parms <- makeParamSet(
   makeDiscreteParam("s", values = c(0.001, 0.01, 0.1, 0.5,1)), 
   makeDiscreteParam("alpha", value = 1)
 ) 
-parallelStartSocket(3, level = "mlr.tuneParams")
+parallelStartSocket(cores, level = "mlr.tuneParams")
 lr.tuning <- tuneParams(lr, task = task, resampling = rdesc,
                         par.set = lr.parms, control = rf.tuneControl, measures = mlr::auc)
 parallelStop()
@@ -148,7 +148,7 @@ auc
 # - Set parameter, task, tune and update learner -
 set.seed(135)
 
-parallelStartSocket(3, level = "mlr.tuneParams")
+parallelStartSocket(cores, level = "mlr.tuneParams")
 lr.tuning.cat <- tuneParams(lr, task = lr.task.cat, resampling = rdesc,
                             par.set = lr.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
@@ -173,7 +173,7 @@ auc
 # - Set parameter, task, tune and update learner -
 #set.seed(136)
 
-#parallelStartSocket(3, level = "mlr.tuneParams")
+#parallelStartSocket(cores, level = "mlr.tuneParams")
 #lr.tuning.cat.norm <- tuneParams(lr, task = lr.task.cat.norm, resampling = rdesc,
 #                            par.set = lr.parms, control = tuneControl, measures = mlr::auc)
 #parallelStop()
@@ -196,12 +196,13 @@ auc
 # - Set parameter, task, tune and update learner -
 set.seed(137)
 nn.parms <- makeParamSet(
-  makeDiscreteParam("decay", values = c(0.0001, 0.001, 0.01, 0.1, 1)), 
-  makeDiscreteParam("size", values = c(1,4,8,16)),
-  makeDiscreteParam("maxit", values = c(400, 600, 800)))
+  makeDiscreteParam("decay", values = c(0.0001, 0.001, 0.01, 0.1)), 
+  makeDiscreteParam("size", values = c(1,4,8,16)))
+  
+  #  makeDiscreteParam("maxit", values = c(400, 600, 800))
 # number of neurons in the hidden layer  
 # decay from 0.0001 to 1
-parallelStartSocket(3)
+parallelStartSocket(cores)
 nn.tuning <- tuneParams(nn, task = nn.task, resampling = rdesc,
                         par.set = nn.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
@@ -223,7 +224,7 @@ auc
 # - Set parameter, task, tune and update learner -
 set.seed(138)
 xgb.parms <- makeParamSet(
-  makeDiscreteParam("nrounds", values = c(100,125,150)), 
+  makeDiscreteParam("nrounds", values = c(100,125)), 
   makeDiscreteParam("max_depth", values =c(3,15)), 
   makeDiscreteParam("eta", values = c(0.01,0.1)),
   makeDiscreteParam("gamma", values = c(0.01,0.1)),
@@ -235,7 +236,7 @@ xgb.parms <- makeParamSet(
 # currently default: lambda = 1, alpha= 0
 # eta went until 0.15 in excercise
 # nrounds = number of iterations/trees?
-parallelStartSocket(3)
+parallelStartSocket(cores)
 xgb.tuning <- tuneParams(xgb, task = task, resampling = rdesc,
                          par.set = xgb.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
@@ -251,7 +252,7 @@ auc
 
 
 
-# ----- Save probability predictions
+# ----------------------- Save probability predictions one by one
 
 rf.cat.pred <- predict(modelLib[["rf.cat"]], newdata = test.2, type = "prob")
 rf.pred <- predict(modelLib[["rf"]], newdata = test.woe, type = "prob")
@@ -264,6 +265,3 @@ xgb.pred <- predict(modelLib[["xgb"]], newdata = test.woe, type = "prob")
 
 # ---------------- Variable Importance
 getFeatureImportance(rf.cat.pred)
-# ... Stuff ...
-# to use different kinds of performances:
-#mlr::performance(pred_raw, measures = list(mlr::auc, mlr::brier, mlr::acc))

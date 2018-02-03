@@ -59,7 +59,7 @@ xxx <- seq(from =0.1,to= 0.9, by = 0.001)
 
 k <- 10
 folds <- cut(1:nrow(test.2), breaks = k, labels = FALSE)
-set.seed(123)
+set.seed(411)
 folds <- sample(folds)
 cv_results <- matrix(nrow = 1, ncol = k)
 for (j in 1:k) {
@@ -101,7 +101,7 @@ xxx <- seq(from =0.1,to= 0.9, by = 0.001)
 
 k <- 10
 folds <- cut(1:nrow(test.woe), breaks = k, labels = FALSE)
-set.seed(123)
+set.seed(412)
 folds <- sample(folds)
 cv_results2 <- matrix(nrow = 1, ncol = k)
 for (j in 1:k) {
