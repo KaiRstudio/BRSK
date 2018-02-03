@@ -5,6 +5,12 @@
 
 
 
+# ----------------------- Set Number of cores
+cores <- max(1,detectCores()-1)
+
+
+
+
 # ----------------------- Start: Define functions
 
 # - Fisher Score -
@@ -96,9 +102,8 @@ nn.test.woe <- nn.test.woe[,names(nn.test.woe) %in% names(test.woe)]
 # ----------------------- Start: Build models 
 
 # - Use parallel computation -
-parallelStartSocket(3)
-set.seed(123)
-rf <- makeLearner("classif.randomForest", predict.type="prob", par.vals=list("replace"=TRUE, "importance"=TRUE))
+parallelStartSocket(cores)
+rf <- makeLearner("classif.randomForest", predict.type="prob", par.vals=list("replace"=TRUE, "importance"=FALSE))
 nn <- makeLearner("classif.nnet", predict.type="prob")
 lr <- makeLearner("classif.glmnet", predict.type="prob")
 xgb <- makeLearner("classif.xgboost", predict.type="prob")
@@ -124,8 +129,8 @@ rdesc <- makeResampleDesc(method="CV", iters=5, stratify=TRUE)
 # - Therefore only neural network wrapper was used for final data - 
 # - Code in regard to rf/lr/xgb wrapper are written as comments - 
 
-set.seed(123)
-parallelStartSocket(3, level = "mlr.selectFeatures")
+set.seed(121)
+parallelStartSocket(cores, level = "mlr.selectFeatures")
 # featureSelectionRF <- selectFeatures(rf, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
 # featureSelectionLR <- selectFeatures(lr, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
 featureSelectionNN <- selectFeatures(nn, task=nn.task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)

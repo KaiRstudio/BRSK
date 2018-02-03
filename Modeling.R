@@ -37,7 +37,7 @@ lr.task.cat <- makeClassifTask(data=train.2, target="return", positive="1")
 # ----------------------- Start: Random Forest with wrapper
 # ---------------------------- Don't use because less good -----
 # - Set parameter, task, tune and update learner -
-#set.seed(123)
+#set.seed(131)
 
 #mtry.rfw.set <- sqrt(ncol(rf.train.woe))*c(0.1,0.25,0.5,1,2,4) # c(0,1,2,4,8)
 #rfw.parms <- makeParamSet(
@@ -49,7 +49,7 @@ lr.task.cat <- makeClassifTask(data=train.2, target="return", positive="1")
 # mtry from half of squaretoot to 2 times squareroot
 # number of bagging iterations 5, 10, 15, 20, 25
 # number of trees 100, 200, 
-#parallelStartSocket(3, level = "mlr.tuneParams")
+#parallelStartSocket(cores, level = "mlr.tuneParams")
 #rfw.tuning <- tuneParams(rf, task = rf.task, resampling = rdesc,
 #                        par.set = rfw.parms, control = tuneControl, measures = mlr::auc)
 #parallelStop()
@@ -70,13 +70,13 @@ lr.task.cat <- makeClassifTask(data=train.2, target="return", positive="1")
 # ----------------------- Start: Random Forest without wrapper - WoE data
 
 # - Set parameter, task, tune and update learner -
-set.seed(123)
-mtry.set <- sqrt(ncol(train.woe))*c(0.1,0.25,0.5,1,2,4)
+set.seed(132)
+mtry.set <- round(sqrt(ncol(train.woe))*c(0.1,0.25,0.5,1,2,4))
 rf.parms <- makeParamSet(
-  makeDiscreteParam("mtry", values= round(mtry.set)), 
-  makeDiscreteParam("ntree", values = c(100, 250, 500, 750, 1000 ))
+  makeDiscreteParam("mtry", values= c(1,2,3,7)), 
+  makeDiscreteParam("ntree", values = c(500, 750, 1000 ))
 ) 
-parallelStartSocket(3, level = "mlr.tuneParams")
+parallelStartSocket(cores, level = "mlr.tuneParams")
 rf.tuning <- tuneParams(rf, task = task, resampling = rdesc,
                         par.set = rf.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
@@ -97,11 +97,12 @@ auc
 # ----------------------- Start: Random Forest without wrapper - Test.2 (with categories)
 
 # - Set parameter, task, tune and update learner -
-set.seed(123)
+set.seed(133)
 
-parallelStartSocket(3, level = "mlr.tuneParams")
+rf.tuneControl <-  makeTuneControlGrid(resolution = 4, tune.threshold = FALSE)
+parallelStartSocket(cores, level = "mlr.tuneParams")
 rf.tuning.cat <- tuneParams(rf, task = rf.task2, resampling = rdesc,
-                            par.set = rf.parms, control = tuneControl, measures = mlr::auc)
+                            par.set = rf.parms, control = rf.tuneControl, measures = mlr::auc)
 parallelStop()
 rf.tuning.cat$x
 rf.tuning.cat <- setHyperPars(rf, par.vals = rf.tuning.cat$x)
@@ -120,14 +121,14 @@ auc
 # ----------------------- Start: Logistic Regression no wrap
 
 # - Set parameter, task, tune and update learner -
-set.seed(123)
+set.seed(134)
 lr.parms <- makeParamSet(
   makeDiscreteParam("s", values = c(0.001, 0.01, 0.1, 0.5,1)), 
   makeDiscreteParam("alpha", value = 1)
 ) 
-parallelStartSocket(3, level = "mlr.tuneParams")
+parallelStartSocket(cores, level = "mlr.tuneParams")
 lr.tuning <- tuneParams(lr, task = task, resampling = rdesc,
-                        par.set = lr.parms, control = tuneControl, measures = mlr::auc)
+                        par.set = lr.parms, control = rf.tuneControl, measures = mlr::auc)
 parallelStop()
 lr.tuning$x
 lr.tuning <- setHyperPars(lr, par.vals = lr.tuning$x) # necessary or how is tuned data extracted?
@@ -145,9 +146,9 @@ auc
 # ----------------------- Start: Logistic Regression no wrap - Test.2 - Categories
 
 # - Set parameter, task, tune and update learner -
-set.seed(123)
+set.seed(135)
 
-parallelStartSocket(3, level = "mlr.tuneParams")
+parallelStartSocket(cores, level = "mlr.tuneParams")
 lr.tuning.cat <- tuneParams(lr, task = lr.task.cat, resampling = rdesc,
                             par.set = lr.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
@@ -170,9 +171,9 @@ auc
 # --------------------- Don't use because it is not good
 
 # - Set parameter, task, tune and update learner -
-#set.seed(123)
+#set.seed(136)
 
-#parallelStartSocket(3, level = "mlr.tuneParams")
+#parallelStartSocket(cores, level = "mlr.tuneParams")
 #lr.tuning.cat.norm <- tuneParams(lr, task = lr.task.cat.norm, resampling = rdesc,
 #                            par.set = lr.parms, control = tuneControl, measures = mlr::auc)
 #parallelStop()
@@ -193,14 +194,15 @@ auc
 # ----------------------- Start: Neural Networks
 
 # - Set parameter, task, tune and update learner -
-set.seed(123)
+set.seed(137)
 nn.parms <- makeParamSet(
-  makeDiscreteParam("decay", values = c(0.0001, 0.001, 0.01, 0.1, 1)), 
-  makeDiscreteParam("size", values = c(1,4,8,16)),
-  makeDiscreteParam("maxit", values = c(400, 600, 800)))
+  makeDiscreteParam("decay", values = c(0.0001, 0.001, 0.01, 0.1)), 
+  makeDiscreteParam("size", values = c(1,4,8,16)))
+  
+  #  makeDiscreteParam("maxit", values = c(400, 600, 800))
 # number of neurons in the hidden layer  
 # decay from 0.0001 to 1
-parallelStartSocket(3)
+parallelStartSocket(cores)
 nn.tuning <- tuneParams(nn, task = nn.task, resampling = rdesc,
                         par.set = nn.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
@@ -217,24 +219,24 @@ auc
 
 
 
-# ----------------------- Start: Extreme Gradient Boosting
+# ----------------------- Start: Extreme Gradient Boosting only WoE
 
 # - Set parameter, task, tune and update learner -
-set.seed(123)
+set.seed(138)
 xgb.parms <- makeParamSet(
-  makeDiscreteParam("nrounds", values = c(100,125,150)), 
-  makeDiscreteParam("max_depth", values =c(3,15,25)), 
-  makeDiscreteParam("eta", values = c(0.01,0.05,0.1)),
-  makeDiscreteParam("gamma", values = c(0.01,0.05,0.1)),
+  makeDiscreteParam("nrounds", values = c(100,125)), 
+  makeDiscreteParam("max_depth", values =c(3,15)), 
+  makeDiscreteParam("eta", values = c(0.01,0.1)),
+  makeDiscreteParam("gamma", values = c(0.01,0.1)),
   makeDiscreteParam("colsample_bytree", values = c(0.75,1)),
-  makeDiscreteParam("min_child_weight",vales = c(1,4,7)),
+  makeDiscreteParam("min_child_weight",values = c(1,4,7)),
   makeDiscreteParam("subsample", values = c(0.75,1))
 )
 # choose lambda and alpha randomly - how?
 # currently default: lambda = 1, alpha= 0
 # eta went until 0.15 in excercise
 # nrounds = number of iterations/trees?
-parallelStartSocket(3)
+parallelStartSocket(cores)
 xgb.tuning <- tuneParams(xgb, task = task, resampling = rdesc,
                          par.set = xgb.parms, control = tuneControl, measures = mlr::auc)
 parallelStop()
@@ -246,11 +248,13 @@ yhat[["xgb"]] <- predict(modelLib[["xgb"]], newdata = test.woe)
 auc[["xgb"]] <- mlr::performance(yhat[["xgb"]], measures = mlr::auc)
 auc
 
-# ----------------------- End: Extreme Gradient Boosting
+# ----------------------- End: Extreme Gradient Boosting only WoE
 
 
 
-# ----- Save probability predictions
+
+
+# ----------------------- Save probability predictions one by one
 
 rf.cat.pred <- predict(modelLib[["rf.cat"]], newdata = test.2, type = "prob")
 rf.pred <- predict(modelLib[["rf"]], newdata = test.woe, type = "prob")
@@ -263,6 +267,3 @@ xgb.pred <- predict(modelLib[["xgb"]], newdata = test.woe, type = "prob")
 
 # ---------------- Variable Importance
 getFeatureImportance(rf.cat.pred)
-# ... Stuff ...
-# to use different kinds of performances:
-#mlr::performance(pred_raw, measures = list(mlr::auc, mlr::brier, mlr::acc))

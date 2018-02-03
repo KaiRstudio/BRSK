@@ -19,9 +19,45 @@ nd$user_title    <- as.factor(nd$user_title)
 nd$user_state    <- as.factor(nd$user_state)
 
 
-
-
 # ----------------------- Start: Prep Variables
+
+# ---- Check whether IDs are known to dataset ----
+# ---- Item_ID ----
+levels(nd$item_id) <- c(levels(factor(nd$item_id)),"New")
+nd$item_id[!(nd$item_id %in% woe.values_ids$xlevels$item_id)] <- factor("New")
+#nd$item_id[nd$item_id %in% single_iid || !(nd$item_id %in% levels(train.split$item_id))] <- factor("New")
+nd$item_id <- factor(nd$item_id, levels = levels(train.split$item_id))
+
+summary(nd$item_id[!(nd$item_id %in% woe.values_ids$xlevels$item_id)])
+factor(woe.values_ids$xlevels$item_id)
+
+
+# ---- User_ID ----
+levels(nd$user_id) <- c(levels(factor(nd$user_id)),"New")
+nd$user_id[!(nd$user_id %in% factor(woe.values_ids$xlevels$user_id))] <- factor("New")
+
+#nd$user_id[nd$user_id %in% single_uid || !(nd$user_id %in% levels(train.split$user_id))] <- factor("New")
+nd$user_id <- factor(nd$user_id)
+                     #, levels = levels(train.split$item_id))
+
+unique(levels(nd$user_id))
+unique(woe.values_ids$xlevels$user_id)
+
+summary((is.na(nd$user_id)))
+nd$user_id[(is.na(nd$user_id))]
+
+
+
+# ---- Brand_ID ----
+levels(nd$brand_id) <- c(levels(factor(nd$brand_id)),"New")
+nd$brand_id[!(nd$brand_id %in% woe.values_ids$xlevels$brand_id)] <- factor("New")
+#nd$brand_id[nd$brand_id %in% single_bid || !(nd$brand_id %in% levels(train.split$brand_id))] <- factor("New")
+nd$brand_id <- factor(nd$brand_id)
+
+
+unique(woe.values_ids$xlevels$brand_id)
+unique(levels(nd$brand_id))
+
 
 # ---- Dates ----
 nd$delivery_date[nd$order_date>nd$delivery_date] <-NA
@@ -124,8 +160,11 @@ nd$delivery_time <- factor(nd$delivery_time)
 # ----------------------- Start: WoE
 # - Predict with respective set for Random Forest - 
 
-set.seed(123)
-final <- predict(woe.values_Ids, newdata=nd, replace = True)
+final <- predict(woe.values_ids, newdata=nd, replace = TRUE)
 
 # ----------------------- End: WoE
+
+
+# impute new items
+# set new users as group in normal data
 
