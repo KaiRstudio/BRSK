@@ -53,7 +53,12 @@ cv_splits.nn <- createFolds(nn.test.woe, k = 10, returnTrain = TRUE)
 str(cv_splits.test.woe)
 
 
-# ----------------------- start cost calculations
+# ----------------------- start cost calculations with three different thresholds.
+
+# I:    naive threshold = 0.5
+# II:   theoretical threshold = th
+# III:  empirical threshold = empth
+
 
 testset.1 <- test.2
 testset.1$pred <- rf.cat.pred$data$prob.1
