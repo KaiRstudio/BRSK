@@ -66,12 +66,17 @@ testset.1$pred <- rf.cat.pred$data$prob.1
 # calculate empirical cost-dependent threshold
 calculating.costs.rf.cat <- function(rf, cv_train, item_price, x){
   all_cost <- numeric()
+  revenue <- numeric()
+  profits <- numeric()
   for (i in seq_along(x)){
     all_cost[i] <- (2.5*sum(3+0.1*(cv_train$item_price[cv_train$pred<x[i] & cv_train$return==1]))+0.5*sum(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==0]));
+    revenue[i] <- sum(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==1]);
+    profits[i] <- revenue[i] - all_cost[i];
   }
-  opt_cutoff <- x[which.min(all_cost)]
+  opt_cutoff <- x[which.max(profits)]
   return (opt_cutoff)
     }
+
 
 # Cross validated calculation of optimal, empirical threshold
 xxx <- seq(from =0.1,to= 0.9, by = 0.01)
