@@ -219,7 +219,7 @@ auc
 
 
 
-# ----------------------- Start: Extreme Gradient Boosting
+# ----------------------- Start: Extreme Gradient Boosting only WoE
 
 # - Set parameter, task, tune and update learner -
 set.seed(138)
@@ -248,7 +248,9 @@ yhat[["xgb"]] <- predict(modelLib[["xgb"]], newdata = test.woe)
 auc[["xgb"]] <- mlr::performance(yhat[["xgb"]], measures = mlr::auc)
 auc
 
-# ----------------------- End: Extreme Gradient Boosting
+# ----------------------- End: Extreme Gradient Boosting only WoE
+
+
 
 
 

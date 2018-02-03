@@ -1,5 +1,8 @@
 # file for Adaptation to Cost Sensitive Learning
-# ----------------------- start calculation of theoretical threshold
+
+
+
+# ----------------------- Cost matrix by mean
 meanItemPrice<-mean(daten$item_price)
 a<-0
 b<-0.5*-meanItemPrice
@@ -41,6 +44,14 @@ caret::confusionMatrix(xgb.pred.class, test.woe$return)
 # ----------------------- end confusion matrices
 
 
+# ----------------------- Cross validation with caret
+set.seed(500)
+cv_splits.test.woe <- createFolds(test.woe, k = 10, returnTrain = TRUE)
+cv_splits.test.2 <- createFolds(test.2, k = 10, returnTrain = TRUE)
+cv_splits.nn <- createFolds(nn.test.woe, k = 10, returnTrain = TRUE)
+
+str(cv_splits.test.woe)
+
 
 # ----------------------- start cost calculations
 
@@ -73,7 +84,7 @@ opt.cross.val.th1 <- mean(cv_results)
 # costs as sum of item prices within test sample, where |no warning| is given but item is |returned|
 falsely.not.warned1 <- sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<th & test.2$return==1])) # theoretical threshold
 falsely.not.warned2 <- sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<0.5 & test.2$return==1])) # naive threshold
-falsely.not.warned.opt1 <- sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<opt.cross.val.th1 & test.2$return==1])) # naive threshold
+falsely.not.warned.opt1 <- sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<opt.cross.val.th1 & test.2$return==1])) # empirical threshold
 
 # costs as sum of item prices within test sample, where |warning| was given although item would have been |kept|
 falsely.warned1 <- sum(test.2$item_price[rf.cat.pred$data[,3]>th & test.2$return==0]) # theoretical threshold

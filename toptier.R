@@ -51,7 +51,7 @@ source("https://raw.githubusercontent.com/KaiRstudio/BRSK/master/Unknown_data_pr
 
 # Predict final data: Put in best model and threshold
 final.pred <- predict(modelLib[["lr.cat"]], newdata = final, type = "prob")
-final.pred.class <- factor(final.pred$data[,2] > 0.5, labels = c(0, 1))
+final.pred.class <- setThreshold(final.pred, th)
 final.pred$data[1:10,2]
 final.pred.class[1:10]
 
