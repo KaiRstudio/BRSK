@@ -114,6 +114,30 @@ agg.col <- function (df.col) {
 
 # ----------------------- Start: Prep Existing Variables
 
+# ---- Item_ID ----
+levels(daten$item_id) <- c(levels(factor(daten$item_id)),"New")
+single_iid<- factor(daten$item_id[daten$item_id %in% names(table(daten$item_id))
+                                  [table(daten$item_id) == 1]])
+daten$item_id[daten$item_id %in% names(table(daten$item_id))[table(daten$item_id) == 1]] <- factor("New")
+daten$item_id <- factor(daten$item_id)
+
+
+# ---- User_ID ----
+levels(daten$user_id) <- c(levels(factor(daten$user_id)),"New")
+single_uid <- factor(daten$user_id[daten$user_id %in% names(table(daten$user_id))
+                                   [table(daten$user_id) == 1]]) 
+daten$user_id[daten$user_id %in% names(table(daten$user_id))[table(daten$user_id) == 1]] <- factor("New")
+daten$user_id <- factor(daten$user_id)
+
+
+# ---- Brand_ID ----
+levels(daten$brand_id) <- c(levels(factor(daten$brand_id)),"New")
+single_bid <- factor(daten$brand_id[daten$brand_id %in% names(table(daten$brand_id))
+                                    [table(daten$brand_id) <= 5]])
+daten$brand_id[daten$brand_id %in% names(table(daten$brand_id))[table(daten$brand_id) <= 5]] <- factor("New")
+daten$brand_id <- factor(daten$brand_id)
+
+
 # ---- Dates ----
 daten$delivery_date[daten$order_date>daten$delivery_date] <-NA
 
@@ -221,17 +245,21 @@ daten$delivery_time <- factor(daten$delivery_time)
 # ----------------------- Start: Split Data
 
 # ---- Training & Test ----
-set.seed(123)
+set.seed(111)
 idx.train <- createDataPartition(y = daten$return, p = 0.75, list = FALSE) # Draw a random, stratified sample including p percent of the data
 test <-  daten[-idx.train, ] # test set
 train <- daten[idx.train, ] # training set
 
 # ---- To avoid overfitting: further data split for WoE ----
+set.seed(112)
 woe.idx.train <- createDataPartition(y=train$return, p = 0.7, list = FALSE) # 0.7 just choosen randomly at the moment
 train.split <- train[woe.idx.train,] # Set for WoE calculation
 
 # ----------------------- End: Split Data
 
+#train.split$item_id <- factor(train.split$item_id)
+#train.split$user_id <- factor(train.split$user_id)
+#train.split$brand_id <- factor(train.split$brand_id)
 
 
 
@@ -241,7 +269,7 @@ train.split <- train[woe.idx.train,] # Set for WoE calculation
 woe.values <- woe(return ~ ., data=train.split, zeroadj=0.05)
 
 # ---- WoE only for variables with many factors (all IDs) ----
-woe.values_ids <- woe(return ~ item_id+brand_id+user_id+item_size, data=train.split, zeroadj=0.05)
+woe.values_ids <- woe(return ~ item_id+brand_id+user_id, data=train.split, zeroadj=0.05)
 # - note: klaR assumes the first level of target to be the target level (WoE refer to no returns)
 
 #barplot(-1*woe.values$woe$user_state)
