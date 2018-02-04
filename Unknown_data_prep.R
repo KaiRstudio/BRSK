@@ -1,5 +1,5 @@
 # - Read unknown data
-githubURL <- "https://raw.githubusercontent.com/KaiRstudio/BRSK/be86d55f0a62bfc0ebeb88a6103d660e4711f68f/BADS_WS1718_class.csv"
+githubURL <- "https://raw.githubusercontent.com/KaiRstudio/BRSK/master/BADS_WS1718_class_20180115.csv"
 nd <- source_data(githubURL, sha1 = "c09db6b674539c097b3d510429007190da761ec1", header = "auto", sep=",")
 
 
