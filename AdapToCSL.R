@@ -24,22 +24,22 @@ th <- costs[2,1]/(costs[2,1] + costs[1,2])
 # ----------------------- confusion matrices for different thresholds
 
 rf.cat.pred.class <- factor(rf.cat.pred$data[,3] > 0.5, labels = c(0, 1))
-caret::confusionMatrix(rf.cat.pred.class, test.2$return)
+caret::confusionMatrix(rf.cat.pred.class, testset.1$return)
 
 rf.pred.class <- factor(rf.pred$data[,3] > 0.5, labels = c(0, 1))
-caret::confusionMatrix(rf.pred.class, test.woe$return)
+caret::confusionMatrix(rf.pred.class, testset.2$return)
 
 lr.pred.class <- factor(lr.pred$data[,3] > 0.5, labels = c(0, 1))
-caret::confusionMatrix(lr.pred.class, test.woe$return)
+caret::confusionMatrix(lr.pred.class, testset.3$return)
 
 lr.cat.pred.class <- factor(lr.cat.pred$data[,3] > 0.5, labels = c(0, 1))
-caret::confusionMatrix(lr.cat.pred.class, test.2$return)
+caret::confusionMatrix(lr.cat.pred.class, testset.4$return)
 
 nn.pred.class <- factor(nn.pred$data[,3] > 0.5, labels = c(0, 1))
-caret::confusionMatrix(nn.pred.class, nn.test.woe$return)
+caret::confusionMatrix(nn.pred.class, testset.5$return)
 
 xgb.pred.class <- factor(xgb.pred$data[,3] > 0.5, labels = c(0, 1))
-caret::confusionMatrix(xgb.pred.class, test.woe$return)
+caret::confusionMatrix(xgb.pred.class, testset.6$return)
 
 # ----------------------- end confusion matrices
 
@@ -93,14 +93,14 @@ for (j in 1:k) {
 cv.emp.th.rf.cat <- mean(cv_results)
 
 # costs as sum of item prices within test sample, where |no warning| is given but item is |returned|
-falsely.not.warned.th.rf.cat <- sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<th & test.2$return==1])) # theoretical threshold
-falsely.not.warned.nth.rf.cat <- sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<0.5 & test.2$return==1])) # naive threshold
-falsely.not.warned.empth.rf.cat <- sum(3+0.1*(test.2$item_price[rf.cat.pred$data[,3]<cv.emp.th.rf.cat & test.2$return==1])) # empirical threshold
+falsely.not.warned.th.rf.cat <- sum(3+0.1*(testset.1$item_price[rf.cat.pred$data[,3]<th & testset.1$return==1])) # theoretical threshold
+falsely.not.warned.nth.rf.cat <- sum(3+0.1*(testset.1$item_price[rf.cat.pred$data[,3]<0.5 & testset.1$return==1])) # naive threshold
+falsely.not.warned.empth.rf.cat <- sum(3+0.1*(testset.1$item_price[rf.cat.pred$data[,3]<cv.emp.th.rf.cat & testset.1$return==1])) # empirical threshold
 
 # costs as sum of item prices within test sample, where |warning| was given although item would have been |kept|
-falsely.warned.th.rf.cat <- sum(test.2$item_price[rf.cat.pred$data[,3]>th & test.2$return==0]) # theoretical threshold
-falsely.warned.nth.rf.cat <- sum(test.2$item_price[rf.cat.pred$data[,3]>0.5 & test.2$return==0]) # naive threshold
-falsely.warned.empth.rf.cat <- sum(test.2$item_price[rf.cat.pred$data[,3]>cv.emp.th.rf.cat & test.2$return==0]) # empirical threshold
+falsely.warned.th.rf.cat <- sum(testset.1$item_price[rf.cat.pred$data[,3]>th & testset.1$return==0]) # theoretical threshold
+falsely.warned.nth.rf.cat <- sum(testset.1$item_price[rf.cat.pred$data[,3]>0.5 & testset.1$return==0]) # naive threshold
+falsely.warned.empth.rf.cat <- sum(testset.1$item_price[rf.cat.pred$data[,3]>cv.emp.th.rf.cat & testset.1$return==0]) # empirical threshold
 
 exp.costs.th.rf.cat <- (2.5*falsely.not.warned.th.rf.cat + 0.5*falsely.warned.th.rf.cat)
 exp.costs.nth.rf.cat <- (2.5*falsely.not.warned.nth.rf.cat + 0.5*falsely.warned.nth.rf.cat)
@@ -143,14 +143,14 @@ for (j in 1:k) {
 cv.emp.th.rf <- mean(cv_results2)
 
 # costs as sum of item prices within test sample, where |no warning| is given but item is |returned|
-falsely.not.warned.th.rf <- sum(3+0.1*(test.woe$item_price[rf.pred$data[,3]<th & test.woe$return==1])) # theoretical threshold
-falsely.not.warned.nth.rf <- sum(3+0.1*(test.woe$item_price[rf.pred$data[,3]<0.5 & test.woe$return==1])) # naive threshold
-falsely.not.warned.empth.rf <- sum(3+0.1*(test.woe$item_price[rf.pred$data[,3]<cv.emp.th.rf & test.woe$return==1])) # empirical threshold
+falsely.not.warned.th.rf <- sum(3+0.1*(testset.2$item_price[rf.pred$data[,3]<th & testset.2$return==1])) # theoretical threshold
+falsely.not.warned.nth.rf <- sum(3+0.1*(testset.2$item_price[rf.pred$data[,3]<0.5 & testset.2$return==1])) # naive threshold
+falsely.not.warned.empth.rf <- sum(3+0.1*(testset.2$item_price[rf.pred$data[,3]<cv.emp.th.rf & testset.2$return==1])) # empirical threshold
 
 # costs as sum of item prices within test sample, where |warning| was given although item would have been |kept|
-falsely.warned.th.rf <- sum(test.woe$item_price[rf.pred$data[,3]>th & test.woe$return==0]) # theoretical threshold
-falsely.warned.nth.rf <- sum(test.woe$item_price[rf.pred$data[,3]>0.5 & test.woe$return==0]) # naive threshold
-falsely.warned.empth.rf <- sum(test.woe$item_price[rf.pred$data[,3]>cv.emp.th.rf & test.woe$return==0]) # naive threshold
+falsely.warned.th.rf <- sum(testset.2$item_price[rf.pred$data[,3]>th & testset.2$return==0]) # theoretical threshold
+falsely.warned.nth.rf <- sum(testset.2$item_price[rf.pred$data[,3]>0.5 & testset.2$return==0]) # naive threshold
+falsely.warned.empth.rf <- sum(testset.2$item_price[rf.pred$data[,3]>cv.emp.th.rf & testset.2$return==0]) # naive threshold
 
 exp.costs.th.rf <- (2.5*falsely.not.warned.th.rf + 0.5*falsely.warned.th.rf)
 exp.costs.nth.rf <- (2.5*falsely.not.warned.nth.rf + 0.5*falsely.warned.nth.rf)
@@ -191,14 +191,14 @@ for (j in 1:k) {
 cv.emp.th.lr <- mean(cv_results3)
 
 # costs as sum of item prices within test sample, where |no warning| is given but item is |returned|
-falsely.not.warned.th.lr <- sum(3+0.1*(test.woe$item_price[lr.pred$data[,3]<th & test.woe$return==1])) # theoretical threshold
-falsely.not.warned.nth.lr <- sum(3+0.1*(test.woe$item_price[lr.pred$data[,3]<0.5 & test.woe$return==1])) # naive threshold
-falsely.not.warned.empth.lr <- sum(3+0.1*(test.woe$item_price[lr.pred$data[,3]<cv.emp.th.lr & test.woe$return==1])) # empirical threshold
+falsely.not.warned.th.lr <- sum(3+0.1*(testset.3$item_price[lr.pred$data[,3]<th & testset.3$return==1])) # theoretical threshold
+falsely.not.warned.nth.lr <- sum(3+0.1*(testset.3$item_price[lr.pred$data[,3]<0.5 & testset.3$return==1])) # naive threshold
+falsely.not.warned.empth.lr <- sum(3+0.1*(testset.3$item_price[lr.pred$data[,3]<cv.emp.th.lr & testset.3$return==1])) # empirical threshold
 
 # costs as sum of item prices within test sample, where |warning| was given although item would have been |kept|
-falsely.warned.th.lr <- sum(test.woe$item_price[lr.pred$data[,3]>th & test.woe$return==0]) # theoretical threshold
-falsely.warned.nth.lr <- sum(test.woe$item_price[lr.pred$data[,3]>0.5 & test.woe$return==0]) # naive threshold
-falsely.warned.empth.lr <- sum(test.woe$item_price[lr.pred$data[,3]>cv.emp.th.lr & test.woe$return==0]) # empirical threshold
+falsely.warned.th.lr <- sum(testset.3$item_price[lr.pred$data[,3]>th & testset.3$return==0]) # theoretical threshold
+falsely.warned.nth.lr <- sum(testset.3$item_price[lr.pred$data[,3]>0.5 & testset.3$return==0]) # naive threshold
+falsely.warned.empth.lr <- sum(testset.3$item_price[lr.pred$data[,3]>cv.emp.th.lr & testset.3$return==0]) # empirical threshold
 
 exp.costs.th.lr <- (2.5*falsely.not.warned.th.lr + 0.5*falsely.warned.th.lr)
 exp.costs.nth.lr <- (2.5*falsely.not.warned.nth.lr + 0.5*falsely.warned.nth.lr)
@@ -239,14 +239,14 @@ for (j in 1:k) {
 cv.emp.th.lr.cat <- mean(cv_results4)
 
 # costs as sum of item prices within test sample, where |no warning| is given but item is |returned|
-falsely.not.warned.th.lr.cat <- sum(3+0.1*(test.2$item_price[lr.cat.pred$data[,3]<th & test.2$return==1])) # theoretical threshold
-falsely.not.warned.nth.lr.cat <- sum(3+0.1*(test.2$item_price[lr.cat.pred$data[,3]<0.5 & test.2$return==1])) # naive threshold
-falsely.not.warned.empth.lr.cat <- sum(3+0.1*(test.2$item_price[lr.cat.pred$data[,3]<cv.emp.th.lr.cat & test.2$return==1])) # empirical threshold
+falsely.not.warned.th.lr.cat <- sum(3+0.1*(testset.4$item_price[lr.cat.pred$data[,3]<th & testset.4$return==1])) # theoretical threshold
+falsely.not.warned.nth.lr.cat <- sum(3+0.1*(testset.4$item_price[lr.cat.pred$data[,3]<0.5 & testset.4$return==1])) # naive threshold
+falsely.not.warned.empth.lr.cat <- sum(3+0.1*(testset.4$item_price[lr.cat.pred$data[,3]<cv.emp.th.lr.cat & testset.4$return==1])) # empirical threshold
 
 # costs as sum of item prices within test sample, where |warning| was given although item would have been |kept|
-falsely.warned.th.lr.cat <- sum(test.2$item_price[lr.cat.pred$data[,3]>th & test.2$return==0]) # theoretical threshold
-falsely.warned.nth.lr.cat <- sum(test.2$item_price[lr.cat.pred$data[,3]>0.5 & test.2$return==0]) # naive threshold
-falsely.warned.empth.lr.cat <- sum(test.2$item_price[lr.cat.pred$data[,3]>cv.emp.th.lr.cat & test.2$return==0]) # empirical threshold
+falsely.warned.th.lr.cat <- sum(testset.4$item_price[lr.cat.pred$data[,3]>th & testset.4$return==0]) # theoretical threshold
+falsely.warned.nth.lr.cat <- sum(testset.4$item_price[lr.cat.pred$data[,3]>0.5 & testset.4$return==0]) # naive threshold
+falsely.warned.empth.lr.cat <- sum(testset.4$item_price[lr.cat.pred$data[,3]>cv.emp.th.lr.cat & testset.4$return==0]) # empirical threshold
 
 exp.costs.th.lr.cat <- (2.5*falsely.not.warned.th.lr.cat + 0.5*falsely.warned.th.lr.cat)
 exp.costs.nth.lr.cat <- (2.5*falsely.not.warned.nth.lr.cat + 0.5*falsely.warned.nth.lr.cat)
@@ -288,14 +288,14 @@ for (j in 1:k) {
 cv.emp.th.nn <- mean(cv_results5)
 
 # costs as sum of item prices within test sample, where |no warning| is given but item is |returned|
-falsely.not.warned.th.nn <- sum(3+0.1*(nn.test.woe2$price[nn.pred$data[,3]<th & nn.test.woe2$return==1])) # theoretical threshold
-falsely.not.warned.nth.nn <- sum(3+0.1*(nn.test.woe2$price[nn.pred$data[,3]<0.5 & nn.test.woe2$return==1])) # naive threshold
-falsely.not.warned.empth.nn <- sum(3+0.1*(nn.test.woe2$price[nn.pred$data[,3]<cv.emp.th.nn & nn.test.woe2$return==1])) # empirical threshold
+falsely.not.warned.th.nn <- sum(3+0.1*(testset.5$price[nn.pred$data[,3]<th & testset.5$return==1])) # theoretical threshold
+falsely.not.warned.nth.nn <- sum(3+0.1*(testset.5$price[nn.pred$data[,3]<0.5 & testset.5$return==1])) # naive threshold
+falsely.not.warned.empth.nn <- sum(3+0.1*(testset.5$price[nn.pred$data[,3]<cv.emp.th.nn & testset.5$return==1])) # empirical threshold
 
 # costs as sum of item prices within test sample, where |warning| was given although item would have been |kept|
-falsely.warned.th.nn <- sum(nn.test.woe2$price[nn.pred$data[,3]>th & nn.test.woe2$return==0]) # theoretical threshold
-falsely.warned.nth.nn <- sum(nn.test.woe2$price[nn.pred$data[,3]>0.5 & nn.test.woe2$return==0]) # naive threshold
-falsely.warned.empth.nn <- sum(nn.test.woe2$price[nn.pred$data[,3]>cv.emp.th.nn & nn.test.woe2$return==0]) # empirical threshold
+falsely.warned.th.nn <- sum(testset.5$price[nn.pred$data[,3]>th & testset.5$return==0]) # theoretical threshold
+falsely.warned.nth.nn <- sum(testset.5$price[nn.pred$data[,3]>0.5 & testset.5$return==0]) # naive threshold
+falsely.warned.empth.nn <- sum(testset.5$price[nn.pred$data[,3]>cv.emp.th.nn & testset.5$return==0]) # empirical threshold
 
 exp.costs.th.nn <- (2.5*falsely.not.warned.th.nn + 0.5*falsely.warned.th.nn)
 exp.costs.nth.nn <- (2.5*falsely.not.warned.nth.nn + 0.5*falsely.warned.nth.nn)
@@ -336,14 +336,14 @@ for (j in 1:k) {
 cv.emp.th.xgb <- mean(cv_results6)
 
 # costs as sum of item prices within test sample, where |no warning| is given but item is |returned|
-falsely.not.warned.th.xgb <- sum(3+0.1*(test.woe$item_price[xgb.pred$data[,3]<th & test.woe$return==1])) # theoretical threshold
-falsely.not.warned.nth.xgb <- sum(3+0.1*(test.woe$item_price[xgb.pred$data[,3]<0.5 & test.woe$return==1])) # naive threshold
-falsely.not.warned.empth.xgb <- sum(3+0.1*(test.woe$item_price[xgb.pred$data[,3]<cv.emp.th.xgb & test.woe$return==1])) # empirical threshold
+falsely.not.warned.th.xgb <- sum(3+0.1*(testset.6$item_price[xgb.pred$data[,3]<th & testset.6$return==1])) # theoretical threshold
+falsely.not.warned.nth.xgb <- sum(3+0.1*(testset.6$item_price[xgb.pred$data[,3]<0.5 & testset.6$return==1])) # naive threshold
+falsely.not.warned.empth.xgb <- sum(3+0.1*(testset.6$item_price[xgb.pred$data[,3]<cv.emp.th.xgb & testset.6$return==1])) # empirical threshold
 
 # costs as sum of item prices within test sample, where |warning| was given although item would have been |kept|
-falsely.warned.th.xgb <- sum(test.woe$item_price[xgb.pred$data[,3]>th & test.woe$return==0]) # theoretical threshold
-falsely.warned.nth.xgb <- sum(test.woe$item_price[xgb.pred$data[,3]>0.5 & test.woe$return==0]) # naive threshold
-falsely.warned.empth.xgb <- sum(test.woe$item_price[xgb.pred$data[,3]>cv.emp.th.xgb & test.woe$return==0]) # empirical threshold
+falsely.warned.th.xgb <- sum(testset.6$item_price[xgb.pred$data[,3]>th & testset.6$return==0]) # theoretical threshold
+falsely.warned.nth.xgb <- sum(testset.6$item_price[xgb.pred$data[,3]>0.5 & testset.6$return==0]) # naive threshold
+falsely.warned.empth.xgb <- sum(testset.6$item_price[xgb.pred$data[,3]>cv.emp.th.xgb & testset.6$return==0]) # empirical threshold
 
 exp.costs.th.xgb <- (2.5*falsely.not.warned.th.xgb + 0.5*falsely.warned.th.xgb)
 exp.costs.nth.xgb <- (2.5*falsely.not.warned.nth.xgb + 0.5*falsely.warned.nth.xgb)
