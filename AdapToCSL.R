@@ -66,14 +66,10 @@ testset.1$pred <- rf.cat.pred$data$prob.1
 # calculate empirical cost-dependent threshold
 calculating.costs.rf.cat <- function(rf, cv_train, item_price, x){
   all_cost <- numeric()
-  revenue <- numeric()
-  profits <- numeric()
   for (i in seq_along(x)){
-    all_cost[i] <- (2.5*sum(3+0.1*(cv_train$item_price[cv_train$pred<x[i] & cv_train$return==1]))+0.5*sum(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==0]));
-    revenue[i] <- sum(cv_train$item_price[cv_train$pred<x[i] & cv_train$return==0])+0.5*sum(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==0])+2.5*sum(3+0.1*(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==1]));
-    profits[i] <- (revenue[i] - all_cost[i]);
-  }
-  opt_cutoff <- x[which.max(profits)]
+    all_cost[i] <-all_cost[i] <- (2.5*sum(3+0.1*(cv_train$item_price[cv_train$pred<x[i] & cv_train$return==1]))+0.5*sum(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==0]));
+    }
+  opt_cutoff <- x[which.min(all_cost)]
   return (opt_cutoff)
     }
 
@@ -82,7 +78,7 @@ xxx <- seq(from =0.1,to= 0.9, by = 0.01)
 
 k <- 10
 folds <- cut(1:nrow(testset.1), breaks = k, labels = FALSE)
-set.seed(411)
+set.seed(711)
 folds <- sample(folds)
 cv_results <- matrix(nrow = 1, ncol = k)
 for (j in 1:k) {
@@ -116,14 +112,10 @@ testset.2$pred <- rf.pred$data$prob.1
 # calculate empirical cost-dependent threshold
 calculating.costs.rf <- function(rf, cv_train, item_price, x){
   all_cost <- numeric()
-  revenue <- numeric()
-  profits <- numeric()
   for (i in seq_along(x)){
     all_cost[i] <- (2.5*sum(3+0.1*(cv_train$item_price[cv_train$pred<x[i] & cv_train$return==1]))+0.5*sum(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==0]));
-    revenue[i] <- sum(cv_train$item_price[cv_train$pred<x[i] & cv_train$return==0])+0.5*sum(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==0])+2.5*sum(3+0.1*(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==1]));
-    profits[i] <- (revenue[i] - all_cost[i]);
     }
-  opt_cutoff <- x[which.max(profits)]
+  opt_cutoff <- x[which.min(all_cost)]
   return (opt_cutoff)
 }
 
@@ -164,14 +156,10 @@ testset.3$pred <- lr.pred$data$prob.1
 # calculate empirical cost-dependent threshold
 calculating.costs.lr <- function(lr, cv_train, item_price, x){
   all_cost <- numeric()
-  revenue <- numeric()
-  profits <- numeric()
   for (i in seq_along(x)){
     all_cost[i] <- (2.5*sum(3+0.1*(cv_train$item_price[cv_train$pred<x[i] & cv_train$return==1]))+0.5*sum(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==0]));
-    revenue[i] <- sum(cv_train$item_price[cv_train$pred<x[i] & cv_train$return==0])+0.5*sum(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==0])+2.5*sum(3+0.1*(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==1]));
-    profits[i] <- (revenue[i] - all_cost[i]);
   }
-  opt_cutoff <- x[which.max(profits)]
+  opt_cutoff <- x[which.min(all_cost)]
   return (opt_cutoff)
 }
 
@@ -212,14 +200,10 @@ testset.4$pred <- lr.cat.pred$data$prob.1
 # calculate empirical cost-dependent threshold
 calculating.costs.lr.cat <- function(lr, cv_train, item_price, x){
   all_cost <- numeric()
-  revenue <- numeric()
-  profits <- numeric()
   for (i in seq_along(x)){
     all_cost[i] <- (2.5*sum(3+0.1*(cv_train$item_price[cv_train$pred<x[i] & cv_train$return==1]))+0.5*sum(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==0]));
-    revenue[i] <- sum(cv_train$item_price[cv_train$pred<x[i] & cv_train$return==0])+0.5*sum(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==0])+2.5*sum(3+0.1*(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==1]));
-    profits[i] <- (revenue[i] - all_cost[i]);
   }
-  opt_cutoff <- x[which.max(profits)]
+  opt_cutoff <- x[which.min(all_cost)]
   return (opt_cutoff)
 }
 
@@ -259,16 +243,12 @@ testset.5$pred <- nn.pred$data$prob.1
 testset.5$price <- test.woe$item_price
 
 # calculate empirical cost-dependent threshold
-calculating.costs.nn <- function(nn, cv_train, item_price, x){
+calculating.costs.nn <- function(nn, cv_train, price, x){
   all_cost <- numeric()
-  revenue <- numeric()
-  profits <- numeric()
-  for (i in seq_along(x)){
-    all_cost[i] <- (2.5*sum(3+0.1*(cv_train$price[cv_train$pred<x[i] & cv_train$return==1]))+0.5*sum(cv_train$price[cv_train$pred>x[i] & cv_train$return==0]));
-    revenue[i] <- sum(cv_train$price[cv_train$pred<x[i] & cv_train$return==0])+0.5*sum(cv_train$price[cv_train$pred>x[i] & cv_train$return==0])+2.5*sum(3+0.1*(cv_train$price[cv_train$pred>x[i] & cv_train$return==1]));
-    profits[i] <- (revenue[i] - all_cost[i]);
+    for (i in seq_along(x)){
+      all_cost[i] <- (2.5*sum(3+0.1*(cv_train$price[cv_train$pred<x[i] & cv_train$return==1]))+0.5*sum(cv_train$price[cv_train$pred>x[i] & cv_train$return==0]));
   }
-  opt_cutoff <- x[which.max(profits)]
+  opt_cutoff <- x[which.min(all_cost)]
   return (opt_cutoff)
 }
 
@@ -276,13 +256,13 @@ calculating.costs.nn <- function(nn, cv_train, item_price, x){
 xxx <- seq(from =0.1,to= 0.9, by = 0.001)
 
 k <- 10
-folds <- cut(1:nrow(testset.4), breaks = k, labels = FALSE)
+folds <- cut(1:nrow(testset.5), breaks = k, labels = FALSE)
 set.seed(415)
 folds <- sample(folds)
 cv_results5 <- matrix(nrow = 1, ncol = k)
 for (j in 1:k) {
   idx_val <- which(folds == j, arr.ind = TRUE)
-  cv_train <- testset.4[-idx_val,]
+  cv_train <- testset.5[-idx_val,]
   cv_results5[1,j] <- calculating.costs.nn(nn, cv_train, price, xxx)
 }
 cv.emp.th.nn <- mean(cv_results5)
@@ -309,14 +289,10 @@ testset.6$pred <- xgb.pred$data$prob.1
 # calculate empirical cost-dependent threshold
 calculating.costs.xgb <- function(xgb, cv_train, item_price, x){
   all_cost <- numeric()
-  revenue <- numeric()
-  profits <- numeric()
   for (i in seq_along(x)){
     all_cost[i] <- (2.5*sum(3+0.1*(cv_train$item_price[cv_train$pred<x[i] & cv_train$return==1]))+0.5*sum(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==0]));
-    revenue[i] <- sum(cv_train$item_price[cv_train$pred<x[i] & cv_train$return==0])+0.5*sum(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==0])+2.5*sum(3+0.1*(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==1]));
-    profits[i] <- (revenue[i] - all_cost[i]);
   }
-  opt_cutoff <- x[which.max(profits)]
+  opt_cutoff <- x[which.min(all_cost)]
   return (opt_cutoff)
 }
 
@@ -324,14 +300,14 @@ calculating.costs.xgb <- function(xgb, cv_train, item_price, x){
 xxx <- seq(from =0.1,to= 0.9, by = 0.001)
 
 k <- 10
-folds <- cut(1:nrow(testset.4), breaks = k, labels = FALSE)
+folds <- cut(1:nrow(testset.6), breaks = k, labels = FALSE)
 set.seed(416)
 folds <- sample(folds)
 cv_results6 <- matrix(nrow = 1, ncol = k)
 for (j in 1:k) {
   idx_val <- which(folds == j, arr.ind = TRUE)
   cv_train <- testset.6[-idx_val,]
-  cv_results6[1,j] <- calculating.costs.xgb(xgb, cv_train, price, xxx)
+  cv_results6[1,j] <- calculating.costs.xgb(xgb, cv_train, item_price, xxx)
 }
 cv.emp.th.xgb <- mean(cv_results6)
 
