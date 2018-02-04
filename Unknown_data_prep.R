@@ -24,24 +24,24 @@ nd$user_state    <- as.factor(nd$user_state)
 # ---- Check whether IDs are known to dataset ----
 # ---- Item_ID ----
 levels(nd$item_id) <- c(levels(factor(nd$item_id)),"New")
-nd$item_id[!(nd$item_id %in% woe.values_ids$xlevels$item_id)] <- factor("New")
+nd$item_id[!(nd$item_id %in% woe.values$xlevels$item_id)] <- factor("New")
 #nd$item_id[nd$item_id %in% single_iid || !(nd$item_id %in% levels(train.split$item_id))] <- factor("New")
-nd$item_id <- factor(nd$item_id, levels = levels(train.split$item_id))
+nd$item_id <- factor(nd$item_id)
 
-summary(nd$item_id[!(nd$item_id %in% woe.values_ids$xlevels$item_id)])
-factor(woe.values_ids$xlevels$item_id)
+summary(nd$item_id[!(nd$item_id %in% woe.values$xlevels$item_id)])
+factor(woe.values$xlevels$item_id)
 
 
 # ---- User_ID ----
 levels(nd$user_id) <- c(levels(factor(nd$user_id)),"New")
-nd$user_id[!(nd$user_id %in% factor(woe.values_ids$xlevels$user_id))] <- factor("New")
+nd$user_id[!(nd$user_id %in% factor(woe.values$xlevels$user_id))] <- factor("New")
 
 #nd$user_id[nd$user_id %in% single_uid || !(nd$user_id %in% levels(train.split$user_id))] <- factor("New")
 nd$user_id <- factor(nd$user_id)
-                     #, levels = levels(train.split$item_id))
+#, levels = levels(train.split$item_id))
 
 unique(levels(nd$user_id))
-unique(woe.values_ids$xlevels$user_id)
+unique(woe.values$xlevels$user_id)
 
 summary((is.na(nd$user_id)))
 nd$user_id[(is.na(nd$user_id))]
@@ -50,12 +50,12 @@ nd$user_id[(is.na(nd$user_id))]
 
 # ---- Brand_ID ----
 levels(nd$brand_id) <- c(levels(factor(nd$brand_id)),"New")
-nd$brand_id[!(nd$brand_id %in% woe.values_ids$xlevels$brand_id)] <- factor("New")
+nd$brand_id[!(nd$brand_id %in% woe.values$xlevels$brand_id)] <- factor("New")
 #nd$brand_id[nd$brand_id %in% single_bid || !(nd$brand_id %in% levels(train.split$brand_id))] <- factor("New")
 nd$brand_id <- factor(nd$brand_id)
 
 
-unique(woe.values_ids$xlevels$brand_id)
+unique(woe.values$xlevels$brand_id)
 unique(levels(nd$brand_id))
 
 
@@ -68,7 +68,7 @@ nd$delivery_date[nd$order_date>nd$delivery_date] <-NA
 nd$item_size <- factor(toupper(nd$item_size))
 levels(nd$item_size) <- c(levels(nd$item_size), "Other")
 nd$item_size [nd$item_size %in% names(prop.table(table(nd$item_size))
-                                            [prop.table(table(nd$item_size))<= 0.01])] <- "Other"
+                                      [prop.table(table(nd$item_size))<= 0.01])] <- "Other"
 nd$item_size <- factor(nd$item_size)
 
 
@@ -115,13 +115,13 @@ nd$age[is.na(nd$age)] <- med.age
 
 # ---- Count_Basket_Size ----
 nd <- join(nd, dplyr::count(nd, order_date, user_id),
-              by = c("order_date", "user_id"))
+           by = c("order_date", "user_id"))
 
 
 
 # ---- Count same Item_ID in basket ----
 nd <- join(nd, count(nd, order_date, user_id, item_id),
-              by = c("order_date", "user_id","item_id"))
+           by = c("order_date", "user_id","item_id"))
 names(nd)[names(nd) == "n"] <- "ct_basket_size"
 names(nd)[names(nd) == "nn"] <- "ct_same_items"
 nd$ct_basket_size <- as.numeric(nd$ct_basket_size)
@@ -134,8 +134,7 @@ nd$ct_same_items <- as.numeric(nd$ct_same_items)
 
 # ----------------------- Start: Drop non relevant variables
 
-drops <- c("order_item_id",
-           "delivery_date",
+drops <- c("delivery_date",
            "user_reg_date",
            "user_dob",
            "order_date")
@@ -149,7 +148,7 @@ nd <- nd[,!(names(nd) %in% drops)]
 # ----------------------- Start: Binning
 
 nd$delivery_time <- ifelse(is.na(nd$delivery_time), "Missing",
-                              ifelse(nd$delivery_time <= 1, "<=1", ">1"))
+                           ifelse(nd$delivery_time <= 1, "<=1", ">1"))
 nd$delivery_time <- factor(nd$delivery_time)
 
 # ----------------------- End: Binning
@@ -160,10 +159,12 @@ nd$delivery_time <- factor(nd$delivery_time)
 # ----------------------- Start: WoE
 # - Predict with respective set for Random Forest - 
 
-final <- predict(woe.values_ids, newdata=nd, replace = TRUE)
+final <- predict(woe.values, newdata=nd, replace = TRUE)
 
 # ----------------------- End: WoE
 
+
+final <- final[,names(final) %in% c(names(test.woe),"order_item_id")]
 
 # impute new items
 # set new users as group in normal data

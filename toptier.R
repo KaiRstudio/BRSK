@@ -50,11 +50,11 @@ source("https://raw.githubusercontent.com/KaiRstudio/BRSK/master/Unknown_data_pr
 
 
 # Predict final data: Put in best model and threshold
-final.pred <- predict(modelLib[["lr.cat"]], newdata = final, type = "prob")
-final.pred.class <- setThreshold(final.pred, th)
-final.pred$data[1:10,2]
-final.pred.class[1:10]
+final.pred <- predict(modelLib[["rf"]], newdata = final, type = "prob")
+final.pred.class <- setThreshold(final.pred, cv.emp.th.rf)
+final.pred$data[1:6,2]
+final.pred.class$data[1:6,]
 
 #Write csv
-output<- data.frame("Order_Item_ID"= pred.data$order_item_id ,"predicted Return" = final.pred.class)
-write.csv(output, "BADSPredicition.csv", row.names = FALSE )
+output<- data.frame("Order_Item_ID"= final$order_item_id ,"Return" = final.pred.class$data[,3])
+write.csv(output, "45.csv", row.names = FALSE )

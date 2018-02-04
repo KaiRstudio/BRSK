@@ -180,7 +180,7 @@ xxx <- seq(from =0.1,to= 0.9, by = 0.001)
 
 k <- 10
 folds <- cut(1:nrow(testset.3), breaks = k, labels = FALSE)
-set.seed(758)
+set.seed(413)
 folds <- sample(folds)
 cv_results3 <- matrix(nrow = 1, ncol = k)
 for (j in 1:k) {
@@ -228,7 +228,7 @@ xxx <- seq(from =0.1,to= 0.9, by = 0.001)
 
 k <- 10
 folds <- cut(1:nrow(testset.4), breaks = k, labels = FALSE)
-set.seed(898)
+set.seed(414)
 folds <- sample(folds)
 cv_results4 <- matrix(nrow = 1, ncol = k)
 for (j in 1:k) {
@@ -277,7 +277,7 @@ xxx <- seq(from =0.1,to= 0.9, by = 0.001)
 
 k <- 10
 folds <- cut(1:nrow(testset.4), breaks = k, labels = FALSE)
-set.seed(321)
+set.seed(415)
 folds <- sample(folds)
 cv_results5 <- matrix(nrow = 1, ncol = k)
 for (j in 1:k) {
@@ -325,7 +325,7 @@ xxx <- seq(from =0.1,to= 0.9, by = 0.001)
 
 k <- 10
 folds <- cut(1:nrow(testset.4), breaks = k, labels = FALSE)
-set.seed(323)
+set.seed(416)
 folds <- sample(folds)
 cv_results6 <- matrix(nrow = 1, ncol = k)
 for (j in 1:k) {
@@ -356,4 +356,4 @@ theoretical.th <- round(c(exp.costs.th.rf.cat,exp.costs.th.rf,exp.costs.th.lr,ex
 empirical.th <- round(c(exp.costs.empth.rf.cat,exp.costs.empth.rf,exp.costs.empth.lr,exp.costs.empth.lr.cat,exp.costs.empth.nn,exp.costs.empth.xgb))
 naming <- c("rf.cat", "rf", "lr", "lr.cat" , "nn", "xgb")
 cost.matrix <- data.frame(naive.th,theoretical.th, empirical.th, row.names = naming)
-cost.matrix
+cost.matrix<f

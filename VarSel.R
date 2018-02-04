@@ -73,6 +73,7 @@ cv.test(train.2$item_color , train.2$return)
 cv.test(train.2$user_state , train.2$return)
 cv.test(train.2$order_month , train.2$return)
 cv.test(train.2$delivery_time , train.2$return)
+cv.test(train.2$item_size , train.2$return)
 
 # ----------------------- End: Cramer's V
 
@@ -103,7 +104,7 @@ nn.test.woe <- nn.test.woe[,names(nn.test.woe) %in% names(test.woe)]
 
 # - Use parallel computation -
 parallelStartSocket(cores)
-rf <- makeLearner("classif.randomForest", predict.type="prob", par.vals=list("replace"=TRUE, "importance"=FALSE))
+rf <- makeLearner("classif.randomForest", predict.type="prob", par.vals=list("replace"=TRUE, "importance"=TRUE))
 nn <- makeLearner("classif.nnet", predict.type="prob")
 lr <- makeLearner("classif.glmnet", predict.type="prob")
 xgb <- makeLearner("classif.xgboost", predict.type="prob")
@@ -133,7 +134,7 @@ set.seed(121)
 parallelStartSocket(cores, level = "mlr.selectFeatures")
 # featureSelectionRF <- selectFeatures(rf, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
 # featureSelectionLR <- selectFeatures(lr, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
-featureSelectionNN <- selectFeatures(nn, task=nn.task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
+# featureSelectionNN <- selectFeatures(nn, task=nn.task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
 # featureSelectionXGB <- selectFeatures(xgb, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
 parallelStop()
 
