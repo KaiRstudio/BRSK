@@ -25,26 +25,14 @@ nd$user_state    <- as.factor(nd$user_state)
 # ---- Item_ID ----
 levels(nd$item_id) <- c(levels(factor(nd$item_id)),"New")
 nd$item_id[!(nd$item_id %in% woe.values$xlevels$item_id)] <- factor("New")
-#nd$item_id[nd$item_id %in% single_iid || !(nd$item_id %in% levels(train.split$item_id))] <- factor("New")
 nd$item_id <- factor(nd$item_id)
 
-summary(nd$item_id[!(nd$item_id %in% woe.values$xlevels$item_id)])
-factor(woe.values$xlevels$item_id)
 
 
 # ---- User_ID ----
 levels(nd$user_id) <- c(levels(factor(nd$user_id)),"New")
 nd$user_id[!(nd$user_id %in% factor(woe.values$xlevels$user_id))] <- factor("New")
-
-#nd$user_id[nd$user_id %in% single_uid || !(nd$user_id %in% levels(train.split$user_id))] <- factor("New")
 nd$user_id <- factor(nd$user_id)
-#, levels = levels(train.split$item_id))
-
-unique(levels(nd$user_id))
-unique(woe.values$xlevels$user_id)
-
-summary((is.na(nd$user_id)))
-nd$user_id[(is.na(nd$user_id))]
 
 
 
@@ -54,9 +42,6 @@ nd$brand_id[!(nd$brand_id %in% woe.values$xlevels$brand_id)] <- factor("New")
 #nd$brand_id[nd$brand_id %in% single_bid || !(nd$brand_id %in% levels(train.split$brand_id))] <- factor("New")
 nd$brand_id <- factor(nd$brand_id)
 
-
-unique(woe.values$xlevels$brand_id)
-unique(levels(nd$brand_id))
 
 
 # ---- Dates ----
@@ -99,7 +84,7 @@ nd$user_title <- factor(nd$user_title)
 # ----------------------- Start: New variables
 
 # ---- Date dependent variables ----
-nd$order_month <- as.factor(months(nd$order_date)) # new column with month of delivery
+nd$order_month <- as.factor(months(nd$order_date))
 nd$delivery_time <- Z.outlier(as.numeric(nd$delivery_date - nd$order_date))
 nd$regorderdiff <- as.numeric(nd$order_date - nd$user_reg_date)
 
@@ -165,7 +150,3 @@ final <- predict(woe.values, newdata=nd, replace = TRUE)
 
 
 final <- final[,names(final) %in% c(names(test.woe),"order_item_id")]
-
-# impute new items
-# set new users as group in normal data
-
