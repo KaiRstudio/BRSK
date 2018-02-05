@@ -50,8 +50,8 @@ source("https://raw.githubusercontent.com/KaiRstudio/BRSK/master/Unknown_data_pr
 
 
 # Predict final data: Put in best model and threshold
-final.pred <- predict(modelLib[["rf"]], newdata = final, type = "prob")
-final.pred.class <- setThreshold(final.pred, cv.emp.th.rf)
+final.pred <- predict(modelLib[["rf.cat"]], newdata = final, type = "prob")
+final.pred.class <- setThreshold(final.pred, cv.emp.th.rf.cat)
 final.pred$data[1:6,2]
 final.pred.class$data[1:6,]
 
