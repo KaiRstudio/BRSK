@@ -24,21 +24,21 @@ nd$user_state    <- as.factor(nd$user_state)
 # ---- Check whether IDs are known to dataset ----
 # ---- Item_ID ----
 levels(nd$item_id) <- c(levels(factor(nd$item_id)),"New")
-nd$item_id[!(nd$item_id %in% woe.values$xlevels$item_id)] <- factor("New")
+nd$item_id[!(nd$item_id %in% woe.values_ids$xlevels$item_id)] <- factor("New")
 nd$item_id <- factor(nd$item_id)
 
 
 
 # ---- User_ID ----
 levels(nd$user_id) <- c(levels(factor(nd$user_id)),"New")
-nd$user_id[!(nd$user_id %in% factor(woe.values$xlevels$user_id))] <- factor("New")
+nd$user_id[!(nd$user_id %in% factor(woe.values_ids$xlevels$user_id))] <- factor("New")
 nd$user_id <- factor(nd$user_id)
 
 
 
 # ---- Brand_ID ----
 levels(nd$brand_id) <- c(levels(factor(nd$brand_id)),"New")
-nd$brand_id[!(nd$brand_id %in% woe.values$xlevels$brand_id)] <- factor("New")
+nd$brand_id[!(nd$brand_id %in% woe.values_ids$xlevels$brand_id)] <- factor("New")
 #nd$brand_id[nd$brand_id %in% single_bid || !(nd$brand_id %in% levels(train.split$brand_id))] <- factor("New")
 nd$brand_id <- factor(nd$brand_id)
 
@@ -144,9 +144,9 @@ nd$delivery_time <- factor(nd$delivery_time)
 # ----------------------- Start: WoE
 # - Predict with respective set for Random Forest - 
 
-final <- predict(woe.values, newdata=nd, replace = TRUE)
+final <- predict(woe.values_ids, newdata=nd, replace = TRUE)
 
 # ----------------------- End: WoE
 
 
-final <- final[,names(final) %in% c(names(test.woe),"order_item_id")]
+final <- final[,names(final) %in% c(names(test.2),"order_item_id")]

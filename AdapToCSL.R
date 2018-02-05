@@ -49,7 +49,7 @@ caret::confusionMatrix(xgb.pred.class, testset.6$return)
 k <- 10
 xxx <- seq(from =0.1,to= 0.9, by = 0.001)
 folds <- cut(1:nrow(test), breaks = k, labels = FALSE)
-set.seed(412)
+set.seed(711)
 folds <- sample(folds)
 
 
@@ -363,9 +363,9 @@ exp.costs.empth.xgb <- (2.5*falsely.not.warned.empth.xgb + 0.5*falsely.warned.em
 
 # -------------------------------------------- Save Results
 
-naive.th <- round(c(exp.costs.nth.rf.cat,exp.costs.nth.rf,exp.costs.nth.lr,exp.costs.nth.lr.cat,exp.costs.nth.nn,exp.costs.nth.xgb))
-theoretical.th <- round(c(exp.costs.th.rf.cat,exp.costs.th.rf,exp.costs.th.lr,exp.costs.th.lr.cat,exp.costs.th.nn,exp.costs.th.xgb))
-empirical.th <- round(c(exp.costs.empth.rf.cat,exp.costs.empth.rf,exp.costs.empth.lr,exp.costs.empth.lr.cat,exp.costs.empth.nn,exp.costs.empth.xgb))
+naive.th <- round(c(exp.costs.nth.rf.cat,exp.costs.nth.rf,exp.costs.nth.lr,exp.costs.nth.lr.cat,exp.costs.nth.nn,exp.costs.nth.xgb)/nrow(test),2)
+theoretical.th <- round(c(exp.costs.th.rf.cat,exp.costs.th.rf,exp.costs.th.lr,exp.costs.th.lr.cat,exp.costs.th.nn,exp.costs.th.xgb)/nrow(test),2)
+empirical.th <- round(c(exp.costs.empth.rf.cat,exp.costs.empth.rf,exp.costs.empth.lr,exp.costs.empth.lr.cat,exp.costs.empth.nn,exp.costs.empth.xgb)/nrow(test),2)
 naming <- c("rf.cat", "rf", "lr", "lr.cat" , "nn", "xgb")
 cost.matrix <- data.frame(naive.th,theoretical.th, empirical.th, row.names = naming)
 cost.matrix
