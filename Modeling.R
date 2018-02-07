@@ -266,4 +266,11 @@ xgb.pred <- predict(modelLib[["xgb"]], newdata = test.woe, type = "prob")
 
 
 # ---------------- Variable Importance
-getFeatureImportance(rf.cat.pred)
+
+featureImportance <- list()
+
+featureImportance[["rf"]] <- unlist(getFeatureImportance(modelLib$rf, type = 1)$res)
+featureImportance[["rf.cat"]] <- unlist(getFeatureImportance(modelLib$rf.cat, type = 1)$res)
+featureImportance[["xgb"]] <- unlist(getFeatureImportance(modelLib$xgb)$res)
+
+featureImportance

@@ -46,7 +46,7 @@ caret::confusionMatrix(xgb.pred.class, testset.6$return)
 
 
 # ---- Prepare Cross Validation ----
-k <- 10
+k <- 5
 xxx <- seq(from =0.1,to= 0.9, by = 0.001)
 folds <- cut(1:nrow(test), breaks = k, labels = FALSE)
 set.seed(711)
