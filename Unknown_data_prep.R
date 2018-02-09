@@ -1,9 +1,14 @@
+
+# -------------------------------- Prep unknown data ----------------------------
+# -------------------------- Prep that it fits to training data ----------------------
+
+
 # - Read unknown data
 githubURL <- "https://raw.githubusercontent.com/KaiRstudio/BRSK/master/BADS_WS1718_class_20180115.csv"
 nd <- source_data(githubURL, sha1 = "c09db6b674539c097b3d510429007190da761ec1", header = "auto", sep=",")
 
 
-# - Prep unknown data by using respective formulas from original data prep
+
 
 # ----------------------- Formatting
 
@@ -17,6 +22,8 @@ nd$brand_id      <- as.factor(nd$brand_id)
 nd$user_id       <- as.factor(nd$user_id)
 nd$user_title    <- as.factor(nd$user_title)
 nd$user_state    <- as.factor(nd$user_state)
+
+
 
 
 # ----------------------- Start: Prep Variables
@@ -39,7 +46,6 @@ nd$user_id <- factor(nd$user_id)
 # ---- Brand_ID ----
 levels(nd$brand_id) <- c(levels(factor(nd$brand_id)),"New")
 nd$brand_id[!(nd$brand_id %in% woe.values_ids$xlevels$brand_id)] <- factor("New")
-#nd$brand_id[nd$brand_id %in% single_bid || !(nd$brand_id %in% levels(train.split$brand_id))] <- factor("New")
 nd$brand_id <- factor(nd$brand_id)
 
 

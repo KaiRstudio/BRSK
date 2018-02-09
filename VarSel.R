@@ -3,12 +3,8 @@
 # - Apply Filter (Cramer, Fisher, IV) and Wrapper and exclude not necessary data -
 
 
-
-
 # ----------------------- Set Number of cores
 cores <- max(1,detectCores()-1)
-
-
 
 
 # ----------------------- Start: Define functions
@@ -31,6 +27,7 @@ cv.test = function(x,y) {
   print.noquote("Cramér V / Phi:")
   return(as.numeric(CV))
 }
+
 # ----------------------- End: Define functions
 
 
@@ -54,7 +51,6 @@ woe.values_ids$IV
 
 # ----------------------- Start: Fisher-Score
 # - For numerical variables -
-# - Normalized data has same values -
 
 fisher_scores_1 <- apply(train.woe[,sapply(train.woe, is.numeric)], 2, fisherScore, train.woe$return)
 fisher_scores_1
@@ -92,7 +88,6 @@ test.woe <- test.woe[,!(names(test.woe) %in% dropswoe)]
 nn.train.woe <- nn.train.woe[,names(nn.train.woe) %in% names(train.woe)]
 nn.test.woe <- nn.test.woe[,names(nn.test.woe) %in% names(test.woe)]
 
-# - No Drops for other sets -
 # ----------------------- End: Drop not important variables
 
 # ----------------------- End: Filter
@@ -126,38 +121,24 @@ rdesc <- makeResampleDesc(method="CV", iters=5, stratify=TRUE)
 
 
 # ----------------------- Start: Wrapper
-# - Wrapper for rf, lr, xgb not necessarily needed and show less good results -
+# - Wrapper for rf, lr, xgb not necessarily needed and showed less good results -
 # - Therefore only neural network wrapper was used for final data - 
-# - Code in regard to rf/lr/xgb wrapper are written as comments - 
 
 set.seed(121)
 parallelStartSocket(cores, level = "mlr.selectFeatures")
-# featureSelectionRF <- selectFeatures(rf, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
-# featureSelectionLR <- selectFeatures(lr, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
-# featureSelectionNN <- selectFeatures(nn, task=nn.task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
-# featureSelectionXGB <- selectFeatures(xgb, task=task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
+featureSelectionNN <- selectFeatures(nn, task=nn.task, resampling=rdesc, control=featureSearchCtrl, measures=mlr::auc, show.info=TRUE)
 parallelStop()
 
 
 # - Show wrapper results -
-# featureSelectionRF # user_id, item_id, delivery_time
-# featureSelectionLR # user_id, item_id
 featureSelectionNN # user_id, item_id, delivery_time
-# featureSelectionXGB
-
 
 # ----------------------- End: Wrapper
 
 
+
+
 # ----------------------- Start: Exclude not relevant variables
-
-# - RF Wrapper -
-# rf.train.woe <- train.woe[,(names(train.woe) %in% c("return","woe.user_id", "woe.item_id", "woe.delivery_time"))]
-# rf.test.woe <- test.woe[,(names(test.woe) %in% c("return","woe.user_id", "woe.item_id", "woe.delivery_time"))]
-
-# - LR Wrapper -
-# lr.train.woe <- train.woe[,names(train.woe) %in% c("return","woe.user_id", "woe.item_id")]
-# lr.test.woe <- test.woe[,names(test.woe) %in% c("return","woe.user_id", "woe.item_id")]
 
 # - NN Wrapper -
 nn.train.woe <- nn.train.woe[, names(nn.train.woe) %in% c("return","woe.user_id", "woe.item_id","delivery_time")]
