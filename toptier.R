@@ -1,4 +1,5 @@
-# --------------  BADS Final Assignment Group 45 -------------
+
+# -------------------------------- BADS Final Assignment Group 45 --------------------------------
 
 #   - Sebastian Gütgemann (589623)  ~ s.guetgemann@gmx.net
 #   - Rieke Ackermann     (588611)  ~ rieke.ackermann@web.de
@@ -6,7 +7,7 @@
 #   - Kai Dessau          (559766)  ~ kai-dessau@web.de
 
 
-#   - File to load the whole set -
+# ---------------------------- Run this file to load the whole code ------------------------------
 
 # 1. Load all packages 
 check.packages <- function(x){
@@ -44,16 +45,12 @@ source("https://raw.githubusercontent.com/KaiRstudio/BRSK/master/Unknown_data_pr
 
 
 # ------------------- Result
-# Best model: ** Random Forest with categories at the moment **
-
-
+# Best model: ** Random Forest with categories based on costs **
 
 
 # Predict final data: Put in best model and threshold
 final.pred <- predict(modelLib[["rf.cat"]], newdata = final, type = "prob")
 final.pred.class <- setThreshold(final.pred, cv.emp.th.rf.cat)
-final.pred$data[1:6,2]
-final.pred.class$data[1:6,]
 
 #Write csv
 output<- data.frame("Order_Item_ID"= final$order_item_id ,"Return" = final.pred.class$data[,3])

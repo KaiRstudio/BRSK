@@ -28,8 +28,8 @@ caret::confusionMatrix(rf.cat.pred.class, testset.1$return)
 rf.pred.class <- factor(rf.pred$data[,3] > 0.5, labels = c(0, 1))
 caret::confusionMatrix(rf.pred.class, testset.2$return)
 
-lr.pred.class <- factor(lr.pred$data[,3] > 0.5, labels = c(0, 1))
-caret::confusionMatrix(lr.pred.class, testset.3$return)
+#lr.pred.class <- factor(lr.pred$data[,3] > 0.5, labels = c(0, 1))
+#caret::confusionMatrix(lr.pred.class, testset.3$return)
 
 lr.cat.pred.class <- factor(lr.cat.pred$data[,3] > 0.5, labels = c(0, 1))
 caret::confusionMatrix(lr.cat.pred.class, testset.4$return)
@@ -64,8 +64,8 @@ testset.2 <- test.woe
 testset.2$pred <- rf.pred$data$prob.1
 
 # - LR with WoE -
-testset.3 <- test.woe
-testset.3$pred <- lr.pred$data$prob.1
+#testset.3 <- test.woe
+#testset.3$pred <- lr.pred$data$prob.1
 
 # - LR with categories -
 testset.4 <- test.2
@@ -182,44 +182,45 @@ exp.costs.empth.rf <- (2.5*falsely.not.warned.empth.rf + 0.5*falsely.warned.empt
 
 
 # -------------------------------------------- Start: LR with WoE
+# - Less good AUC and more costs than LR with categories -
 
 # - Find threshold with min costs -
-calculating.costs.lr <- function(lr, cv_train, item_price, x){
-  all_cost <- numeric()
-  for (i in seq_along(x)){
-    all_cost[i] <- (2.5*sum(3+0.1*(cv_train$item_price[cv_train$pred<x[i] & cv_train$return==1]))+0.5*sum(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==0]));
-  }
-  opt_cutoff <- x[which.min(all_cost)]
-  return (opt_cutoff)
-}
-
-
-# - Empirical Thresholding: Find Optimum -
-cv_results3 <- matrix(nrow = 1, ncol = k)
-for (j in 1:k) {
-  idx_val <- which(folds == j, arr.ind = TRUE)
-  cv_train <- testset.3[-idx_val,]
-  cv_results3[1,j] <- calculating.costs.lr(lr, cv_train, item_price, xxx)
-}
-cv.emp.th.lr <- mean(cv_results3)
-
-
-# ---- Costs: |no warning| but item is |returned| ----
-falsely.not.warned.th.lr <- sum(3+0.1*(testset.3$item_price[lr.pred$data[,3]<th & testset.3$return==1])) # theoretical threshold
-falsely.not.warned.nth.lr <- sum(3+0.1*(testset.3$item_price[lr.pred$data[,3]<0.5 & testset.3$return==1])) # naive threshold
-falsely.not.warned.empth.lr <- sum(3+0.1*(testset.3$item_price[lr.pred$data[,3]<cv.emp.th.lr & testset.3$return==1])) # empirical threshold
-
-
-# ---- Costs: |warning| but item would have been |kept| ----
-falsely.warned.th.lr <- sum(testset.3$item_price[lr.pred$data[,3]>th & testset.3$return==0]) # theoretical threshold
-falsely.warned.nth.lr <- sum(testset.3$item_price[lr.pred$data[,3]>0.5 & testset.3$return==0]) # naive threshold
-falsely.warned.empth.lr <- sum(testset.3$item_price[lr.pred$data[,3]>cv.emp.th.lr & testset.3$return==0]) # empirical threshold
-
-
-# ---- Total Costs: LR with WoE ----
-exp.costs.th.lr <- (2.5*falsely.not.warned.th.lr + 0.5*falsely.warned.th.lr)
-exp.costs.nth.lr <- (2.5*falsely.not.warned.nth.lr + 0.5*falsely.warned.nth.lr)
-exp.costs.empth.lr <- (2.5*falsely.not.warned.empth.lr + 0.5*falsely.warned.empth.lr)
+#calculating.costs.lr <- function(lr, cv_train, item_price, x){
+#  all_cost <- numeric()
+#  for (i in seq_along(x)){
+#    all_cost[i] <- (2.5*sum(3+0.1*(cv_train$item_price[cv_train$pred<x[i] & cv_train$return==1]))+0.5*sum(cv_train$item_price[cv_train$pred>x[i] & cv_train$return==0]));
+#  }
+#  opt_cutoff <- x[which.min(all_cost)]
+#  return (opt_cutoff)
+#}
+#
+#
+## - Empirical Thresholding: Find Optimum -
+#cv_results3 <- matrix(nrow = 1, ncol = k)
+#for (j in 1:k) {
+#  idx_val <- which(folds == j, arr.ind = TRUE)
+#  cv_train <- testset.3[-idx_val,]
+#  cv_results3[1,j] <- calculating.costs.lr(lr, cv_train, item_price, xxx)
+#}
+#cv.emp.th.lr <- mean(cv_results3)
+#
+#
+## ---- Costs: |no warning| but item is |returned| ----
+#falsely.not.warned.th.lr <- sum(3+0.1*(testset.3$item_price[lr.pred$data[,3]<th & testset.3$return==1])) # theoretical threshold
+#falsely.not.warned.nth.lr <- sum(3+0.1*(testset.3$item_price[lr.pred$data[,3]<0.5 & testset.3$return==1])) # naive threshold
+#falsely.not.warned.empth.lr <- sum(3+0.1*(testset.3$item_price[lr.pred$data[,3]<cv.emp.th.lr & testset.3$return==1])) # empirical threshold
+#
+#
+## ---- Costs: |warning| but item would have been |kept| ----
+#falsely.warned.th.lr <- sum(testset.3$item_price[lr.pred$data[,3]>th & testset.3$return==0]) # theoretical threshold
+#falsely.warned.nth.lr <- sum(testset.3$item_price[lr.pred$data[,3]>0.5 & testset.3$return==0]) # naive threshold
+#falsely.warned.empth.lr <- sum(testset.3$item_price[lr.pred$data[,3]>cv.emp.th.lr & testset.3$return==0]) # empirical threshold
+#
+#
+## ---- Total Costs: LR with WoE ----
+#exp.costs.th.lr <- (2.5*falsely.not.warned.th.lr + 0.5*falsely.warned.th.lr)
+#exp.costs.nth.lr <- (2.5*falsely.not.warned.nth.lr + 0.5*falsely.warned.nth.lr)
+#exp.costs.empth.lr <- (2.5*falsely.not.warned.empth.lr + 0.5*falsely.warned.empth.lr)
 
 # -------------------------------------------- End: LR with WoE
 
@@ -363,10 +364,10 @@ exp.costs.empth.xgb <- (2.5*falsely.not.warned.empth.xgb + 0.5*falsely.warned.em
 
 # -------------------------------------------- Save Results
 
-naive.th <- round(c(exp.costs.nth.rf.cat,exp.costs.nth.rf,exp.costs.nth.lr,exp.costs.nth.lr.cat,exp.costs.nth.nn,exp.costs.nth.xgb)/nrow(test),2)
-theoretical.th <- round(c(exp.costs.th.rf.cat,exp.costs.th.rf,exp.costs.th.lr,exp.costs.th.lr.cat,exp.costs.th.nn,exp.costs.th.xgb)/nrow(test),2)
-empirical.th <- round(c(exp.costs.empth.rf.cat,exp.costs.empth.rf,exp.costs.empth.lr,exp.costs.empth.lr.cat,exp.costs.empth.nn,exp.costs.empth.xgb)/nrow(test),2)
-naming <- c("rf.cat", "rf", "lr", "lr.cat" , "nn", "xgb")
+naive.th <- round(c(exp.costs.nth.rf.cat,exp.costs.nth.rf,exp.costs.nth.lr.cat,exp.costs.nth.nn,exp.costs.nth.xgb)/nrow(test),2)
+theoretical.th <- round(c(exp.costs.th.rf.cat,exp.costs.th.rf,exp.costs.th.lr.cat,exp.costs.th.nn,exp.costs.th.xgb)/nrow(test),2)
+empirical.th <- round(c(exp.costs.empth.rf.cat,exp.costs.empth.rf,exp.costs.empth.lr.cat,exp.costs.empth.nn,exp.costs.empth.xgb)/nrow(test),2)
+naming <- c("rf.cat", "rf", "lr.cat" , "nn", "xgb")
 cost.matrix <- data.frame(naive.th,theoretical.th, empirical.th, row.names = naming)
 cost.matrix
 

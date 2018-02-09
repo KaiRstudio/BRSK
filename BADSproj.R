@@ -4,50 +4,6 @@
 
 
 
-# ----------------------- Packages
-
-if(!require("plyr"))          install.packages("plyr");         library("plyr")
-if(!require("dplyr"))         install.packages("dplyr");        library("dplyr")
-if(!require("stringdist"))    install.packages("stringdist");   library("stringdist")
-if(!require("rpart"))         install.packages("rpart");        library("rpart")
-if(!require("psych"))         install.packages("psych");        library("psych")
-if(!require("car"))           install.packages("car");          library("car")
-if(!require("Amelia"))        install.packages("Amelia");       library("Amelia")
-if(!require("boot"))          install.packages("boot", dep=T);  library("boot")
-if(!require("caret"))         install.packages("caret");        library("caret")
-if(!require("rpart"))         install.packages("rpart");        library("rpart")
-if(!require("rattle"))        install.packages("rattle");       library("rattle")
-if(!require("rpart.plot"))    install.packages("rpart.plot");   library("rpart.plot")
-if(!require("RColorBrewer"))  install.packages("RColorBrewer"); library("RColorBrewer")
-if(!require("rms"))           install.packages("rms");          library("rms")
-if(!require("pROC"))          install.packages("pROC");         library("pROC")
-if(!require("e1071"))         install.packages("e1071");        library("e1071")
-if(!require("randomForest"))  install.packages("randomForest"); library("randomForest")
-if(!require("hmeasure"))      install.packages("hmeasure");     library("hmeasure")
-if(!require("repmis"))        install.packages("repmis");       library("repmis")
-if(!require("ggplot2"))       install.packages("ggplot2");      library("ggplot2")
-if(!require("eeptools"))      install.packages("eeptools");     library("eeptools")
-if(!require("xgboost"))       install.packages("xgboost");      library("xgboost")
-if(!require("penalized"))     install.packages("penalized");    library("penalized")
-if(!require("neuralnet"))     install.packages("neuralnet");    library("neuralnet")
-if(!require("woeBinning"))    install.packages("woeBinning");   library("woeBinning")
-if(!require("klaR"))          install.packages("klaR");         library("klaR")
-
-# ----------------------- Packages
-if(!require("NeuralNetTools")) install.packages("NeuralNetTools"); library("NeuralNetTools")
-if(!require("glmnet"))         install.packages("glmnet");        library("glmnet")
-if(!require("mlr"))         install.packages("mlr");        library("mlr")
-if(!require("parallelMap"))         install.packages("parallelMap");        library("parallelMap")
-
-# ----------------------- Packages
-if(!require("nnet"))            install.packages("nnet");           library("nnet")
-if(!require("parallel"))        install.packages("parallel");       library("parallel")
-
-# ----------------------- 
-if(!require("repmis")) install.packages("repmis");library("repmis")
-
-
-
 
 # ----------------------- Load Data
 
@@ -86,7 +42,7 @@ age <- function(from, to) {
     to_lt$mon < from_lt$mon |
       (to_lt$mon == from_lt$mon & to_lt$mday < from_lt$mday),
     age - 1,
-    age)} ## why not just use difference between order date and yob?
+    age)} 
 
 
 # ---- Exclude Outlier by Z-Score ----
@@ -230,7 +186,7 @@ daten <- daten[,!(names(daten) %in% drops)]
 
 # ----------------------- Start: Binning
 
-# ---- Significant: delivery_time ----
+# ---- Only significant: delivery_time ----
 binning <- woe.binning (df=daten, target.var="return", pred.var=c("delivery_time"), min.perc.class = 0.01)
 #woe.binning.plot(binning)
 daten$delivery_time <- ifelse(is.na(daten$delivery_time), "Missing",
@@ -246,20 +202,17 @@ daten$delivery_time <- factor(daten$delivery_time)
 
 # ---- Training & Test ----
 set.seed(111)
-idx.train <- createDataPartition(y = daten$return, p = 0.75, list = FALSE) # Draw a random, stratified sample including p percent of the data
+idx.train <- createDataPartition(y = daten$return, p = 0.75, list = FALSE)
 test <-  daten[-idx.train, ] # test set
 train <- daten[idx.train, ] # training set
 
 # ---- To avoid overfitting: further data split for WoE ----
 set.seed(112)
-woe.idx.train <- createDataPartition(y=train$return, p = 0.7, list = FALSE) # 0.7 just choosen randomly at the moment
+woe.idx.train <- createDataPartition(y=train$return, p = 0.7, list = FALSE)
 train.split <- train[woe.idx.train,] # Set for WoE calculation
 
 # ----------------------- End: Split Data
 
-#train.split$item_id <- factor(train.split$item_id)
-#train.split$user_id <- factor(train.split$user_id)
-#train.split$brand_id <- factor(train.split$brand_id)
 
 
 
@@ -270,7 +223,7 @@ woe.values <- woe(return ~ ., data=train.split, zeroadj=0.05)
 
 # ---- WoE only for variables with many factors (all IDs) ----
 woe.values_ids <- woe(return ~ item_id+brand_id+user_id, data=train.split, zeroadj=0.05)
-# - note: klaR assumes the first level of target to be the target level (WoE refer to no returns)
+# Note: Negative WoE means higher probability to return
 
 #barplot(-1*woe.values$woe$user_state)
 
@@ -288,6 +241,7 @@ train.2 <-predict(woe.values_ids, newdata=train, replace=TRUE)
 
 
 # ----------------------- Start: Normalized data
+# - Normalize Data for NN -
 normalizer <- caret::preProcess(train[,names(train) %in% c("item_price","regorderdiff","age","ct_basket_size","ct_same_items")],
                                 method = c("center", "scale"))
 
@@ -299,7 +253,7 @@ nn.train.woe$return <- as.factor(ifelse(nn.train.woe$return == 1, 1, -1))
 nn.test.woe$return <- as.factor(ifelse(nn.test.woe$return == 1, 1, -1))
 
 # ---- Normalized dataset with categorical variables ----
-test.3 <- predict(normalizer, newdata= test.2)
-train.3 <- predict(normalizer, newdata=train.2)
+#test.3 <- predict(normalizer, newdata= test.2)
+#train.3 <- predict(normalizer, newdata=train.2)
 
 # ----------------------- End: Normalized data
