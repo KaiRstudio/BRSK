@@ -274,3 +274,11 @@ featureImportance[["rf.cat"]] <- unlist(getFeatureImportance(modelLib$rf.cat, ty
 featureImportance[["xgb"]] <- unlist(getFeatureImportance(modelLib$xgb)$res)
 
 featureImportance
+
+barchart(featureImportance$rf.cat[c(order(featureImportance$rf.cat))],
+         col = "peachpuff",
+         xlab = "Mean Decrease in Accuracy",
+         ylab = "Variables",
+         xlim = c(0,400))
+
+
