@@ -253,6 +253,7 @@ nn.train.woe$return <- as.factor(ifelse(nn.train.woe$return == 1, 1, -1))
 nn.test.woe$return <- as.factor(ifelse(nn.test.woe$return == 1, 1, -1))
 
 # ---- Normalized dataset with categorical variables ----
+# - Normalized data with categorical variables didn't show performance improvements -
 #test.3 <- predict(normalizer, newdata= test.2)
 #train.3 <- predict(normalizer, newdata=train.2)
 

@@ -35,7 +35,7 @@ lr.task.cat <- makeClassifTask(data=train.2, target="return", positive="1")
 
 # - Set parameter, task, tune and update learner -
 set.seed(132)
-mtry.set <- round(sqrt(ncol(train.woe))*c(0.1,0.25,0.5,1,2,4))
+mtry.set <- round(sqrt(ncol(train.woe))*c(0.1,0.25,0.5,1,2,4)) # Recommondation by Breiman for mtry
 rf.parms <- makeParamSet(
   makeDiscreteParam("mtry", values= c(1,2,3,7)), 
   makeDiscreteParam("ntree", values = c(500, 750, 1000 ))
