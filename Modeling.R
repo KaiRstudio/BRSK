@@ -233,13 +233,14 @@ featureImportance[["xgb"]] <- unlist(getFeatureImportance(modelLib$xgb)$res)
 
 
 # - Plot final model -
-windowsFonts(times = windowsFont("Times New Roman")) 
-par(family = "times", font = 2, font.lab = 1, font.axis = 1)
-par(mar = c(4,6,2,2) + 0.1)
-barplot(featureImportance$rf.cat[c(order(featureImportance$rf.cat))],
-        horiz = TRUE,
-         col = "peachpuff",
-         xlab = "Mean Decrease in Accuracy",
-          las = 1,
-        xlim = c(0,350)
-)
+#windowsFonts(times = windowsFont("Times New Roman")) 
+#par(family = "times", font = 2, font.lab = 1, font.axis = 1)
+#par(mar = c(4,6,2,2) + 0.1)
+#barplot(featureImportance$rf.cat[c(order(featureImportance$rf.cat))],
+#        horiz = TRUE,
+#         col = "peachpuff",
+#         xlab = "Mean Decrease in Accuracy",
+#          las = 1,
+#        xlim = c(0,350)
+#)
+
